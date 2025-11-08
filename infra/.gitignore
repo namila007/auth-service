@@ -1,0 +1,37 @@
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# Logs
+logs/
+*.log
+
+# Docker volumes data (if mounted locally)
+data/
+volumes/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Backup files
+*.bak
+*.backup
+
+
+init-scripts/
+keycloak/
+pgadmin/
+logs/
+config/
+.env
+.env.local
+.env.*.local
