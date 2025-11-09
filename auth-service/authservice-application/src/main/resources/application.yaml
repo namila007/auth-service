@@ -1,0 +1,130 @@
+spring:
+  application:
+    name: auth-service
+  
+  # PostgreSQL Database Configuration
+  datasource:
+    url: jdbc:postgresql://localhost:5432/authdb
+    username: authuser
+    password: authpass123
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 5
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+      pool-name: AuthServiceHikariPool
+  
+  # JPA/Hibernate Configuration
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+        use_sql_comments: true
+        jdbc:
+          batch_size: 20
+        order_inserts: true
+        order_updates: true
+    open-in-view: false
+  
+  # Flyway Migration Configuration
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    schemas: identity,authorization,configuration,governance
+    baseline-on-migrate: true
+    validate-on-migrate: true
+    out-of-order: false
+  
+  # Redis Configuration
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      password: redis123
+      timeout: 2000ms
+      lettuce:
+        pool:
+          max-active: 8
+          max-idle: 8
+          min-idle: 0
+          max-wait: -1ms
+
+# Server Configuration
+server:
+  port: 8090
+  servlet:
+    context-path: /api
+  error:
+    include-message: always
+    include-binding-errors: always
+    include-stacktrace: on_param
+    include-exception: false
+  compression:
+    enabled: true
+    mime-types: application/json,application/xml,text/html,text/xml,text/plain
+
+# Logging Configuration
+logging:
+  level:
+    root: INFO
+    me.namila.service.auth: DEBUG
+    org.springframework.web: INFO
+    org.springframework.security: DEBUG
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+    org.flywaydb: INFO
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+  file:
+    name: logs/auth-service.log
+    max-size: 10MB
+    max-history: 30
+
+# Management/Actuator Configuration
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: when-authorized
+  health:
+    redis:
+      enabled: true
+    db:
+      enabled: true
+
+# Application Info
+info:
+  app:
+    name: Auth Service
+    description: Enterprise Authentication and Authorization Service
+    version: 0.0.1
+    group: me.namila.service.auth
+
+# JWT Configuration
+jwt:
+  secret: ${JWT_SECRET:default-secret-key-that-should-be-changed-in-production-minimum-256-bits-for-hmac-sha-algorithms}
+  expiration: ${JWT_EXPIRATION:1800000} # 30 minutes in milliseconds
+  issuer: ${JWT_ISSUER:auth-service}
+
+# SpringDoc OpenAPI Configuration
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    enabled: true
+    operations-sorter: method
+    tags-sorter: alpha
+    doc-expansion: none
+

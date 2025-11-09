@@ -1974,11 +1974,11 @@ src/main/java/com/company/authservice/
 ### Phase 2: User Management & Basic Auth (Weeks 3-4)
 
 **Deliverables**:
-- [ ] User management REST APIs
-- [ ] Profile management
-- [ ] Basic authentication (JWT generation)
-- [ ] Token validation middleware
-- [ ] API documentation (OpenAPI/Swagger)
+- [x] User management REST APIs
+- [x] Profile management
+- [x] Basic authentication (JWT generation)
+- [x] Token validation middleware
+- [x] API documentation (OpenAPI/Swagger)
 
 **API Endpoints**:
 - POST /api/v1/users

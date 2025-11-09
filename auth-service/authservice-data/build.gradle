@@ -1,0 +1,39 @@
+plugins {
+    id("java-library")
+    id("org.springframework.boot") apply false
+}
+
+dependencies {
+    // Common module with base classes
+    implementation(project(":auth-service-common"))
+    api(project(":authservice-domain:domain-application"))
+    
+    // Spring Data JPA
+    implementation(libs.spring.boot.starter.data.jpa)
+
+    // PostgreSQL
+    runtimeOnly(libs.postgresql)
+
+    // Redis
+    implementation(libs.spring.boot.starter.data.redis)
+    implementation(libs.lettuce.core)
+
+    // Jackson for JSON serialization
+    implementation("com.fasterxml.jackson.core:jackson-databind")
+
+    // Flyway for migrations
+    implementation(libs.flyway.core)
+    implementation(libs.flyway.database.postgresql)
+
+    // MapStruct
+    implementation(libs.mapstruct)
+    annotationProcessor(libs.mapstruct.processor)
+
+    // Lombok
+    compileOnly(libs.lombok)
+    annotationProcessor(libs.lombok)
+
+    // Testing
+
+
+}

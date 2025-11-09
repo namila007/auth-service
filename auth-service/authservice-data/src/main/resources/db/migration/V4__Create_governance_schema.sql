@@ -1,0 +1,48 @@
+-- ============================================
+-- GOVERNANCE SCHEMA
+-- ============================================
+
+CREATE SCHEMA IF NOT EXISTS governance;
+
+-- Create audit_logs table (will be partitioned later)
+CREATE TABLE governance.audit_logs (
+    audit_id UUID PRIMARY KEY,
+    timestamp TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    event_type VARCHAR(100) NOT NULL,
+    actor_id UUID,
+    actor_type VARCHAR(50) NOT NULL,
+    subject_id UUID,
+    resource VARCHAR(255),
+    action VARCHAR(100),
+    decision VARCHAR(50),
+    policy_version VARCHAR(100),
+    context JSONB,
+    ip_address VARCHAR(45),
+    user_agent TEXT,
+    correlation_id VARCHAR(100)
+);
+
+CREATE INDEX idx_audit_logs_timestamp ON governance.audit_logs(timestamp DESC);
+CREATE INDEX idx_audit_logs_actor ON governance.audit_logs(actor_id);
+CREATE INDEX idx_audit_logs_subject ON governance.audit_logs(subject_id);
+CREATE INDEX idx_audit_logs_event_type ON governance.audit_logs(event_type);
+CREATE INDEX idx_audit_logs_correlation ON governance.audit_logs(correlation_id);
+CREATE INDEX idx_audit_logs_resource ON governance.audit_logs(resource);
+
+-- Create access_certifications table
+CREATE TABLE governance.access_certifications (
+    certification_id UUID PRIMARY KEY,
+    user_id UUID NOT NULL REFERENCES identity.users(user_id),
+    role_id UUID NOT NULL REFERENCES authorization.roles(role_id),
+    certification_date TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    certified_by UUID NOT NULL,
+    status VARCHAR(50) NOT NULL,
+    next_review_date TIMESTAMP WITH TIME ZONE,
+    notes TEXT
+);
+
+CREATE INDEX idx_access_certifications_user ON governance.access_certifications(user_id);
+CREATE INDEX idx_access_certifications_status ON governance.access_certifications(status);
+CREATE INDEX idx_access_certifications_next_review ON governance.access_certifications(next_review_date);
+CREATE INDEX idx_access_certifications_role ON governance.access_certifications(role_id);
+

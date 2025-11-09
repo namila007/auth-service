@@ -1,0 +1,38 @@
+plugins {
+    id("java-library")
+    id("org.springframework.boot") apply false
+}
+
+dependencies {
+    // Common module with base classes
+    implementation(project(":auth-service-common"))
+    api(project(":authservice-domain:domain-core"))
+    
+    // Spring
+    implementation(libs.spring.boot.starter.web)
+    compileOnly(libs.spring.boot.starter.data.jpa)
+    // Spring Data Commons for Pageable
+    implementation("org.springframework.data:spring-data-commons")
+    // Spring Transaction for @Transactional
+    implementation("org.springframework:spring-tx")
+
+    // MapStruct
+    implementation(libs.mapstruct)
+    annotationProcessor(libs.mapstruct.processor)
+
+    // Lombok
+    compileOnly(libs.lombok)
+    annotationProcessor(libs.lombok)
+    annotationProcessor("org.projectlombok:lombok-mapstruct-binding:0.2.0")
+
+    // Jakarta Validation
+    implementation(libs.jakarta.validation.api)
+
+    // Testing
+    testImplementation(libs.spring.boot.starter.test)
+    testImplementation(project(":authservice-domain:domain-core"))
+//    testImplementation(libs.junit.jupiter)
+    testImplementation(libs.mockito.core)
+    testImplementation(libs.mockito.junit.jupiter)
+    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+}

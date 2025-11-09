@@ -1,0 +1,21 @@
+
+dependencies {
+    // Common module with base classes
+    implementation(project(":auth-service-common"))
+    
+    // Jakarta Validation for domain rules
+    implementation("jakarta.validation:jakarta.validation-api:3.0.2")
+
+    implementation(libs.uuid.creator )
+    
+    // Lombok for reducing boilerplate
+    compileOnly(libs.lombok)
+    annotationProcessor(libs.lombok)
+    
+    // Testing dependencies
+    testImplementation(libs.junit.jupiter)
+    testImplementation(libs.mockito.core)
+    testImplementation(libs.mockito.junit.jupiter)
+    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+}
+

@@ -1,0 +1,11 @@
+rootProject.name = "auth-service"
+
+include(
+    "auth-service-common",
+    "authservice-application",
+    "authservice-domain",
+    "authservice-domain:domain-core",
+    "authservice-domain:domain-application",
+    "authservice-data"
+)
+

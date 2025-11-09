@@ -1,0 +1,32 @@
+plugins {
+    id 'java'
+}
+
+group = 'me.namila.service.auth'
+version = '0.0.1'
+
+java {
+    sourceCompatibility = '22'
+    targetCompatibility = '22'
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    // UUID Creator for UUIDv7 generation
+    implementation 'com.github.f4b6a3:uuid-creator:5.2.0'
+    
+    // Jakarta Validation (optional, for domain validation)
+    compileOnly 'jakarta.validation:jakarta.validation-api:3.0.2'
+
+    // Lombok for reducing boilerplate
+    compileOnly(libs.lombok)
+    annotationProcessor(libs.lombok)
+}
+
+tasks.named('test') {
+    useJUnitPlatform()
+}
+
