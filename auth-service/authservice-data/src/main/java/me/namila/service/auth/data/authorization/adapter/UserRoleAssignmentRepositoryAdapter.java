@@ -4,7 +4,7 @@ import lombok.RequiredArgsConstructor;
 import me.namila.service.auth.data.authorization.mapper.UserRoleAssignmentEntityMapper;
 import me.namila.service.auth.data.authorization.repository.UserRoleAssignmentJpaRepository;
 import me.namila.service.auth.domain.application.port.authorization.UserRoleAssignmentRepositoryPort;
-import me.namila.service.auth.domain.core.authorization.model.UserRoleAssignment;
+import me.namila.service.auth.domain.core.authorization.model.UserRoleAssignmentAggregate;
 import me.namila.service.auth.domain.core.authorization.valueobject.AssignmentScope;
 import me.namila.service.auth.domain.core.authorization.valueobject.AssignmentStatus;
 import org.springframework.stereotype.Component;
@@ -26,27 +26,27 @@ public class UserRoleAssignmentRepositoryAdapter implements UserRoleAssignmentRe
     private final UserRoleAssignmentEntityMapper mapper;
     
     @Override
-    public UserRoleAssignment save(UserRoleAssignment assignment) {
+    public UserRoleAssignmentAggregate save(UserRoleAssignmentAggregate assignment) {
         var entity = mapper.toEntity(assignment);
         var saved = jpaRepository.save(entity);
         return mapper.toDomain(saved);
     }
     
     @Override
-    public Optional<UserRoleAssignment> findById(UUID assignmentId) {
+    public Optional<UserRoleAssignmentAggregate> findById(UUID assignmentId) {
         return jpaRepository.findById(assignmentId)
             .map(mapper::toDomain);
     }
     
     @Override
-    public List<UserRoleAssignment> findByUserId(UUID userId) {
+    public List<UserRoleAssignmentAggregate> findByUserId(UUID userId) {
         return jpaRepository.findByUser_UserId(userId).stream()
             .map(mapper::toDomain)
             .collect(Collectors.toList());
     }
     
     @Override
-    public List<UserRoleAssignment> findActiveByUserId(UUID userId) {
+    public List<UserRoleAssignmentAggregate> findActiveByUserId(UUID userId) {
         Instant now = Instant.now();
         return jpaRepository.findByUser_UserId(userId).stream()
             .map(mapper::toDomain)
@@ -55,28 +55,28 @@ public class UserRoleAssignmentRepositoryAdapter implements UserRoleAssignmentRe
     }
     
     @Override
-    public List<UserRoleAssignment> findByRoleId(UUID roleId) {
+    public List<UserRoleAssignmentAggregate> findByRoleId(UUID roleId) {
         return jpaRepository.findByRole_RoleId(roleId).stream()
             .map(mapper::toDomain)
             .collect(Collectors.toList());
     }
     
     @Override
-    public List<UserRoleAssignment> findByUserIdAndRoleId(UUID userId, UUID roleId) {
+    public List<UserRoleAssignmentAggregate> findByUserIdAndRoleId(UUID userId, UUID roleId) {
         return jpaRepository.findByUser_UserIdAndRole_RoleId(userId, roleId).stream()
             .map(mapper::toDomain)
             .collect(Collectors.toList());
     }
     
     @Override
-    public List<UserRoleAssignment> findByStatus(AssignmentStatus status) {
+    public List<UserRoleAssignmentAggregate> findByStatus(AssignmentStatus status) {
         return jpaRepository.findByStatus(status.name()).stream()
             .map(mapper::toDomain)
             .collect(Collectors.toList());
     }
     
     @Override
-    public List<UserRoleAssignment> findByScope(AssignmentScope scope) {
+    public List<UserRoleAssignmentAggregate> findByScope(AssignmentScope scope) {
         return jpaRepository.findByScope(scope.name()).stream()
             .map(mapper::toDomain)
             .collect(Collectors.toList());

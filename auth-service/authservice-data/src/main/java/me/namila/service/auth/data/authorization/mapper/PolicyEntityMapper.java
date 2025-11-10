@@ -1,7 +1,8 @@
 package me.namila.service.auth.data.authorization.mapper;
 
 import me.namila.service.auth.data.authorization.entity.PolicyEntity;
-import me.namila.service.auth.domain.core.authorization.model.Policy;
+import me.namila.service.auth.domain.core.authorization.model.PolicyAggregate;
+import me.namila.service.auth.domain.core.authorization.model.id.PolicyId;
 import me.namila.service.auth.domain.core.authorization.valueobject.Effect;
 import me.namila.service.auth.domain.core.authorization.valueobject.PolicyType;
 import org.mapstruct.Mapper;
@@ -18,15 +19,17 @@ import java.util.Set;
 @Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public interface PolicyEntityMapper {
     
+    @Mapping(target = "id", source = "policyId", qualifiedByName = "uuidToPolicyId")
     @Mapping(target = "policyType", source = "policyType", qualifiedByName = "stringToPolicyType")
     @Mapping(target = "effect", source = "effect", qualifiedByName = "stringToEffect")
     @Mapping(target = "actions", source = "actions", qualifiedByName = "listToSet")
-    Policy toDomain(PolicyEntity entity);
+    PolicyAggregate toDomain(PolicyEntity entity);
     
+    @Mapping(target = "policyId", source = "id.value")
     @Mapping(target = "policyType", source = "policyType", qualifiedByName = "policyTypeToString")
     @Mapping(target = "effect", source = "effect", qualifiedByName = "effectToString")
     @Mapping(target = "actions", source = "actions", qualifiedByName = "setToList")
-    PolicyEntity toEntity(Policy domain);
+    PolicyEntity toEntity(PolicyAggregate domain);
     
     @Named("stringToPolicyType")
     default PolicyType stringToPolicyType(String policyType) {
@@ -56,6 +59,11 @@ public interface PolicyEntityMapper {
     @Named("setToList")
     default List<String> setToList(Set<String> set) {
         return set != null ? List.copyOf(set) : null;
+    }
+    
+    @Named("uuidToPolicyId")
+    default PolicyId uuidToPolicyId(java.util.UUID uuid) {
+        return uuid != null ? PolicyId.of(uuid) : null;
     }
 }
 

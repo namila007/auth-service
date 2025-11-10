@@ -2,7 +2,10 @@ package me.namila.service.auth.data.authorization.mapper;
 
 import me.namila.service.auth.data.authorization.entity.UserRoleAssignmentEntity;
 import me.namila.service.auth.data.identity.entity.UserEntity;
-import me.namila.service.auth.domain.core.authorization.model.UserRoleAssignment;
+import me.namila.service.auth.domain.core.authorization.model.UserRoleAssignmentAggregate;
+import me.namila.service.auth.domain.core.authorization.model.id.UserRoleAssignmentId;
+import me.namila.service.auth.domain.core.identity.model.id.UserId;
+import me.namila.service.auth.domain.core.authorization.model.id.RoleId;
 import me.namila.service.auth.domain.core.authorization.valueobject.AssignmentScope;
 import me.namila.service.auth.domain.core.authorization.valueobject.AssignmentStatus;
 import org.mapstruct.Mapper;
@@ -16,17 +19,19 @@ import org.mapstruct.ReportingPolicy;
 @Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public interface UserRoleAssignmentEntityMapper {
     
+    @Mapping(target = "id", source = "assignmentId", qualifiedByName = "uuidToUserRoleAssignmentId")
     @Mapping(target = "scope", source = "scope", qualifiedByName = "stringToAssignmentScope")
     @Mapping(target = "status", source = "status", qualifiedByName = "stringToAssignmentStatus")
-    @Mapping(target = "userId", source = "user.userId")
-    @Mapping(target = "roleId", source = "role.roleId")
-    UserRoleAssignment toDomain(UserRoleAssignmentEntity entity);
+    @Mapping(target = "userId", source = "user.userId", qualifiedByName = "uuidToUserId")
+    @Mapping(target = "roleId", source = "role.roleId", qualifiedByName = "uuidToRoleId")
+    UserRoleAssignmentAggregate toDomain(UserRoleAssignmentEntity entity);
     
+    @Mapping(target = "assignmentId", source = "id.value")
     @Mapping(target = "scope", source = "scope", qualifiedByName = "assignmentScopeToString")
     @Mapping(target = "status", source = "status", qualifiedByName = "assignmentStatusToString")
     @Mapping(target = "user", ignore = true)
     @Mapping(target = "role", ignore = true)
-    UserRoleAssignmentEntity toEntity(UserRoleAssignment domain);
+    UserRoleAssignmentEntity toEntity(UserRoleAssignmentAggregate domain);
     
     @Named("stringToAssignmentScope")
     default AssignmentScope stringToAssignmentScope(String scope) {
@@ -46,6 +51,21 @@ public interface UserRoleAssignmentEntityMapper {
     @Named("assignmentStatusToString")
     default String assignmentStatusToString(AssignmentStatus status) {
         return status != null ? status.name() : null;
+    }
+    
+    @Named("uuidToUserRoleAssignmentId")
+    default UserRoleAssignmentId uuidToUserRoleAssignmentId(java.util.UUID uuid) {
+        return uuid != null ? UserRoleAssignmentId.of(uuid) : null;
+    }
+    
+    @Named("uuidToUserId")
+    default UserId uuidToUserId(java.util.UUID uuid) {
+        return uuid != null ? UserId.of(uuid) : null;
+    }
+    
+    @Named("uuidToRoleId")
+    default RoleId uuidToRoleId(java.util.UUID uuid) {
+        return uuid != null ? RoleId.of(uuid) : null;
     }
 }
 

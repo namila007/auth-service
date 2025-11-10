@@ -1,6 +1,6 @@
 package me.namila.service.auth.domain.application.port.configuration;
 
-import me.namila.service.auth.domain.core.configuration.model.OIDCProviderConfig;
+import me.namila.service.auth.domain.core.configuration.model.OIDCProviderConfigAggregate;
 
 import java.util.List;
 import java.util.Optional;
@@ -16,21 +16,21 @@ public interface OIDCProviderConfigRepositoryPort {
      * @param config The config to save
      * @return The saved config
      */
-    OIDCProviderConfig save(OIDCProviderConfig config);
+    OIDCProviderConfigAggregate save(OIDCProviderConfigAggregate config);
     
     /**
      * Find a config by ID.
      * @param providerId The provider ID
      * @return Optional containing the config if found
      */
-    Optional<OIDCProviderConfig> findById(UUID providerId);
+    Optional<OIDCProviderConfigAggregate> findById(UUID providerId);
     
     /**
      * Find a config by provider name.
      * @param providerName The provider name
      * @return Optional containing the config if found
      */
-    Optional<OIDCProviderConfig> findByProviderName(String providerName);
+    Optional<OIDCProviderConfigAggregate> findByProviderName(String providerName);
     
     /**
      * Check if a provider name exists.
@@ -43,13 +43,13 @@ public interface OIDCProviderConfigRepositoryPort {
      * Find all configs.
      * @return List of all configs
      */
-    List<OIDCProviderConfig> findAll();
+    List<OIDCProviderConfigAggregate> findAll();
     
     /**
      * Find enabled configs.
      * @return List of enabled configs
      */
-    List<OIDCProviderConfig> findEnabledConfigs();
+    List<OIDCProviderConfigAggregate> findEnabledConfigs();
     
     /**
      * Delete a config by ID.

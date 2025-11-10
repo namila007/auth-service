@@ -1,7 +1,7 @@
 package me.namila.service.auth.data.governance.mapper;
 
 import me.namila.service.auth.data.governance.entity.AuditLogEntity;
-import me.namila.service.auth.domain.core.governance.model.AuditLog;
+import me.namila.service.auth.domain.core.governance.model.id.AuditLogId;
 import me.namila.service.auth.domain.core.governance.valueobject.ActorType;
 import me.namila.service.auth.domain.core.governance.valueobject.AuditEventType;
 import me.namila.service.auth.domain.core.governance.valueobject.Decision;
@@ -16,17 +16,17 @@ import org.mapstruct.ReportingPolicy;
 @Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public interface AuditLogEntityMapper {
     
-    @Mapping(target = "auditId", source = "auditId")
+    @Mapping(target = "id", source = "auditId", qualifiedByName = "uuidToAuditLogId")
     @Mapping(target = "eventType", source = "eventType", qualifiedByName = "stringToAuditEventType")
     @Mapping(target = "actorType", source = "actorType", qualifiedByName = "stringToActorType")
     @Mapping(target = "decision", source = "decision", qualifiedByName = "stringToDecision")
-    AuditLog toDomain(AuditLogEntity entity);
+    me.namila.service.auth.domain.core.governance.model.AuditLogEntity toDomain(AuditLogEntity entity);
     
-    @Mapping(target = "auditId", source = "auditId")
+    @Mapping(target = "auditId", source = "id.value")
     @Mapping(target = "eventType", source = "eventType", qualifiedByName = "auditEventTypeToString")
     @Mapping(target = "actorType", source = "actorType", qualifiedByName = "actorTypeToString")
     @Mapping(target = "decision", source = "decision", qualifiedByName = "decisionToString")
-    AuditLogEntity toEntity(AuditLog domain);
+    AuditLogEntity toEntity(me.namila.service.auth.domain.core.governance.model.AuditLogEntity domain);
     
     @Named("stringToAuditEventType")
     default AuditEventType stringToAuditEventType(String eventType) {
@@ -56,6 +56,11 @@ public interface AuditLogEntityMapper {
     @Named("decisionToString")
     default String decisionToString(Decision decision) {
         return decision != null ? decision.name() : null;
+    }
+    
+    @Named("uuidToAuditLogId")
+    default AuditLogId uuidToAuditLogId(java.util.UUID uuid) {
+        return uuid != null ? AuditLogId.of(uuid) : null;
     }
 }
 

@@ -4,7 +4,7 @@ import lombok.RequiredArgsConstructor;
 import me.namila.service.auth.data.governance.mapper.AuditLogEntityMapper;
 import me.namila.service.auth.data.governance.repository.AuditLogJpaRepository;
 import me.namila.service.auth.domain.application.port.governance.AuditLogRepositoryPort;
-import me.namila.service.auth.domain.core.governance.model.AuditLog;
+import me.namila.service.auth.domain.core.governance.model.AuditLogEntity;
 import me.namila.service.auth.domain.core.governance.valueobject.AuditEventType;
 import org.springframework.stereotype.Component;
 
@@ -26,55 +26,55 @@ public class AuditLogRepositoryAdapter implements AuditLogRepositoryPort {
     private final AuditLogEntityMapper mapper;
     
     @Override
-    public AuditLog save(AuditLog auditLog) {
+    public AuditLogEntity save(AuditLogEntity auditLog) {
         var entity = mapper.toEntity(auditLog);
         var saved = jpaRepository.save(entity);
         return mapper.toDomain(saved);
     }
     
     @Override
-    public Optional<AuditLog> findById(UUID auditId) {
+    public Optional<AuditLogEntity> findById(UUID auditId) {
         return jpaRepository.findById(auditId)
             .map(mapper::toDomain);
     }
     
     @Override
-    public List<AuditLog> findByActorId(UUID actorId) {
+    public List<AuditLogEntity> findByActorId(UUID actorId) {
         return jpaRepository.findByActorId(actorId).stream()
             .map(mapper::toDomain)
             .collect(Collectors.toList());
     }
     
     @Override
-    public List<AuditLog> findBySubjectId(UUID subjectId) {
+    public List<AuditLogEntity> findBySubjectId(UUID subjectId) {
         return jpaRepository.findBySubjectId(subjectId).stream()
             .map(mapper::toDomain)
             .collect(Collectors.toList());
     }
     
     @Override
-    public List<AuditLog> findByEventType(AuditEventType eventType) {
+    public List<AuditLogEntity> findByEventType(AuditEventType eventType) {
         return jpaRepository.findByEventType(eventType.name()).stream()
             .map(mapper::toDomain)
             .collect(Collectors.toList());
     }
     
     @Override
-    public List<AuditLog> findByCorrelationId(String correlationId) {
+    public List<AuditLogEntity> findByCorrelationId(String correlationId) {
         return jpaRepository.findByCorrelationId(correlationId).stream()
             .map(mapper::toDomain)
             .collect(Collectors.toList());
     }
     
     @Override
-    public List<AuditLog> findByTimestampBetween(Instant startTime, Instant endTime) {
+    public List<AuditLogEntity> findByTimestampBetween(Instant startTime, Instant endTime) {
         return jpaRepository.findByTimestampBetween(startTime, endTime).stream()
             .map(mapper::toDomain)
             .collect(Collectors.toList());
     }
     
     @Override
-    public List<AuditLog> findByResource(String resource) {
+    public List<AuditLogEntity> findByResource(String resource) {
         return jpaRepository.findByResource(resource).stream()
             .map(mapper::toDomain)
             .collect(Collectors.toList());

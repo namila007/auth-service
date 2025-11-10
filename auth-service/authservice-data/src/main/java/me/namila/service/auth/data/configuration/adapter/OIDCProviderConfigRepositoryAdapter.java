@@ -4,7 +4,7 @@ import lombok.RequiredArgsConstructor;
 import me.namila.service.auth.data.configuration.mapper.OIDCProviderConfigEntityMapper;
 import me.namila.service.auth.data.configuration.repository.OIDCProviderConfigJpaRepository;
 import me.namila.service.auth.domain.application.port.configuration.OIDCProviderConfigRepositoryPort;
-import me.namila.service.auth.domain.core.configuration.model.OIDCProviderConfig;
+import me.namila.service.auth.domain.core.configuration.model.OIDCProviderConfigAggregate;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -24,20 +24,20 @@ public class OIDCProviderConfigRepositoryAdapter implements OIDCProviderConfigRe
     private final OIDCProviderConfigEntityMapper mapper;
     
     @Override
-    public OIDCProviderConfig save(OIDCProviderConfig config) {
+    public OIDCProviderConfigAggregate save(OIDCProviderConfigAggregate config) {
         var entity = mapper.toEntity(config);
         var saved = jpaRepository.save(entity);
         return mapper.toDomain(saved);
     }
     
     @Override
-    public Optional<OIDCProviderConfig> findById(UUID providerId) {
+    public Optional<OIDCProviderConfigAggregate> findById(UUID providerId) {
         return jpaRepository.findById(providerId)
             .map(mapper::toDomain);
     }
     
     @Override
-    public Optional<OIDCProviderConfig> findByProviderName(String providerName) {
+    public Optional<OIDCProviderConfigAggregate> findByProviderName(String providerName) {
         return jpaRepository.findByProviderName(providerName)
             .map(mapper::toDomain);
     }
@@ -48,14 +48,14 @@ public class OIDCProviderConfigRepositoryAdapter implements OIDCProviderConfigRe
     }
     
     @Override
-    public List<OIDCProviderConfig> findAll() {
+    public List<OIDCProviderConfigAggregate> findAll() {
         return jpaRepository.findAll().stream()
             .map(mapper::toDomain)
             .collect(Collectors.toList());
     }
     
     @Override
-    public List<OIDCProviderConfig> findEnabledConfigs() {
+    public List<OIDCProviderConfigAggregate> findEnabledConfigs() {
         return jpaRepository.findByEnabled(true).stream()
             .map(mapper::toDomain)
             .collect(Collectors.toList());

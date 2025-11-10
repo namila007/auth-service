@@ -1,6 +1,6 @@
 package me.namila.service.auth.domain.application.port.authorization;
 
-import me.namila.service.auth.domain.core.authorization.model.Policy;
+import me.namila.service.auth.domain.core.authorization.model.PolicyAggregate;
 import me.namila.service.auth.domain.core.authorization.valueobject.PolicyType;
 
 import java.util.List;
@@ -17,47 +17,47 @@ public interface PolicyRepositoryPort {
      * @param policy The policy to save
      * @return The saved policy
      */
-    Policy save(Policy policy);
+    PolicyAggregate save(PolicyAggregate policy);
     
     /**
      * Find a policy by ID.
      * @param policyId The policy ID
      * @return Optional containing the policy if found
      */
-    Optional<Policy> findById(UUID policyId);
+    Optional<PolicyAggregate> findById(UUID policyId);
     
     /**
      * Find a policy by name.
      * @param policyName The policy name
      * @return Optional containing the policy if found
      */
-    Optional<Policy> findByPolicyName(String policyName);
+    Optional<PolicyAggregate> findByPolicyName(String policyName);
     
     /**
      * Find all policies.
      * @return List of all policies
      */
-    List<Policy> findAll();
+    List<PolicyAggregate> findAll();
     
     /**
      * Find enabled policies.
      * @return List of enabled policies
      */
-    List<Policy> findEnabledPolicies();
+    List<PolicyAggregate> findEnabledPolicies();
     
     /**
      * Find policies by type.
      * @param policyType The policy type
      * @return List of policies with the given type
      */
-    List<Policy> findByPolicyType(PolicyType policyType);
+    List<PolicyAggregate> findByPolicyType(PolicyType policyType);
     
     /**
      * Find enabled policies by type.
      * @param policyType The policy type
      * @return List of enabled policies with the given type
      */
-    List<Policy> findEnabledByPolicyType(PolicyType policyType);
+    List<PolicyAggregate> findEnabledByPolicyType(PolicyType policyType);
     
     /**
      * Delete a policy by ID.

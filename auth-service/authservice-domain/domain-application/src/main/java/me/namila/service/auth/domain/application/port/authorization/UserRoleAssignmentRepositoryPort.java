@@ -1,6 +1,6 @@
 package me.namila.service.auth.domain.application.port.authorization;
 
-import me.namila.service.auth.domain.core.authorization.model.UserRoleAssignment;
+import me.namila.service.auth.domain.core.authorization.model.UserRoleAssignmentAggregate;
 import me.namila.service.auth.domain.core.authorization.valueobject.AssignmentScope;
 import me.namila.service.auth.domain.core.authorization.valueobject.AssignmentStatus;
 
@@ -18,35 +18,35 @@ public interface UserRoleAssignmentRepositoryPort {
      * @param assignment The assignment to save
      * @return The saved assignment
      */
-    UserRoleAssignment save(UserRoleAssignment assignment);
+    UserRoleAssignmentAggregate save(UserRoleAssignmentAggregate assignment);
     
     /**
      * Find an assignment by ID.
      * @param assignmentId The assignment ID
      * @return Optional containing the assignment if found
      */
-    Optional<UserRoleAssignment> findById(UUID assignmentId);
+    Optional<UserRoleAssignmentAggregate> findById(UUID assignmentId);
     
     /**
      * Find all assignments for a user.
      * @param userId The user ID
      * @return List of assignments for the user
      */
-    List<UserRoleAssignment> findByUserId(UUID userId);
+    List<UserRoleAssignmentAggregate> findByUserId(UUID userId);
     
     /**
      * Find active assignments for a user.
      * @param userId The user ID
      * @return List of active assignments for the user
      */
-    List<UserRoleAssignment> findActiveByUserId(UUID userId);
+    List<UserRoleAssignmentAggregate> findActiveByUserId(UUID userId);
     
     /**
      * Find all assignments for a role.
      * @param roleId The role ID
      * @return List of assignments for the role
      */
-    List<UserRoleAssignment> findByRoleId(UUID roleId);
+    List<UserRoleAssignmentAggregate> findByRoleId(UUID roleId);
     
     /**
      * Find assignments by user and role.
@@ -54,21 +54,21 @@ public interface UserRoleAssignmentRepositoryPort {
      * @param roleId The role ID
      * @return List of assignments matching user and role
      */
-    List<UserRoleAssignment> findByUserIdAndRoleId(UUID userId, UUID roleId);
+    List<UserRoleAssignmentAggregate> findByUserIdAndRoleId(UUID userId, UUID roleId);
     
     /**
      * Find assignments by status.
      * @param status The assignment status
      * @return List of assignments with the given status
      */
-    List<UserRoleAssignment> findByStatus(AssignmentStatus status);
+    List<UserRoleAssignmentAggregate> findByStatus(AssignmentStatus status);
     
     /**
      * Find assignments by scope.
      * @param scope The assignment scope
      * @return List of assignments with the given scope
      */
-    List<UserRoleAssignment> findByScope(AssignmentScope scope);
+    List<UserRoleAssignmentAggregate> findByScope(AssignmentScope scope);
     
     /**
      * Delete an assignment by ID.

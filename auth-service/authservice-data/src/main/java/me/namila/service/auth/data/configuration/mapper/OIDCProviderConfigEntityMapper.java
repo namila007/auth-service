@@ -4,48 +4,51 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import me.namila.service.auth.data.configuration.entity.OIDCProviderConfigEntity;
 import me.namila.service.auth.domain.core.configuration.model.*;
+import me.namila.service.auth.domain.core.configuration.model.id.OIDCProviderConfigId;
 import me.namila.service.auth.domain.core.configuration.valueobject.ProviderType;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.Named;
 import org.mapstruct.ReportingPolicy;
+import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  * MapStruct mapper for OIDCProviderConfig Entity-Domain conversion.
  */
 @Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
-public interface OIDCProviderConfigEntityMapper {
+public abstract class OIDCProviderConfigEntityMapper {
     
-    ObjectMapper objectMapper = new ObjectMapper();
+    @Autowired
+    protected ObjectMapper objectMapper;
     
-    @Mapping(target = "providerId", source = "providerId")
+    @Mapping(target = "id", source = "providerId", qualifiedByName = "uuidToOIDCProviderConfigId")
     @Mapping(target = "providerType", source = "providerType", qualifiedByName = "stringToProviderType")
     @Mapping(target = "configuration", source = "configuration", qualifiedByName = "jsonToOIDCConfiguration")
     @Mapping(target = "attributeMapping", source = "attributeMapping", qualifiedByName = "jsonToAttributeMappingConfig")
     @Mapping(target = "roleMapping", source = "roleMapping", qualifiedByName = "jsonToRoleMappingConfig")
     @Mapping(target = "jitProvisioning", source = "jitProvisioning", qualifiedByName = "jsonToJITProvisioningConfig")
-    OIDCProviderConfig toDomain(OIDCProviderConfigEntity entity);
+    public abstract     OIDCProviderConfigAggregate toDomain(OIDCProviderConfigEntity entity);
     
-    @Mapping(target = "providerId", source = "providerId")
+    @Mapping(target = "providerId", source = "id.value")
     @Mapping(target = "providerType", source = "providerType", qualifiedByName = "providerTypeToString")
     @Mapping(target = "configuration", source = "configuration", qualifiedByName = "oidcConfigurationToJson")
     @Mapping(target = "attributeMapping", source = "attributeMapping", qualifiedByName = "attributeMappingConfigToJson")
     @Mapping(target = "roleMapping", source = "roleMapping", qualifiedByName = "roleMappingConfigToJson")
     @Mapping(target = "jitProvisioning", source = "jitProvisioning", qualifiedByName = "jitProvisioningConfigToJson")
-    OIDCProviderConfigEntity toEntity(OIDCProviderConfig domain);
+    public abstract OIDCProviderConfigEntity toEntity(OIDCProviderConfigAggregate domain);
     
     @Named("stringToProviderType")
-    default ProviderType stringToProviderType(String providerType) {
+    protected ProviderType stringToProviderType(String providerType) {
         return providerType != null ? ProviderType.valueOf(providerType) : null;
     }
     
     @Named("providerTypeToString")
-    default String providerTypeToString(ProviderType providerType) {
+    protected String providerTypeToString(ProviderType providerType) {
         return providerType != null ? providerType.name() : null;
     }
     
     @Named("jsonToOIDCConfiguration")
-    default OIDCConfiguration jsonToOIDCConfiguration(java.util.Map<String, Object> json) {
+    protected OIDCConfiguration jsonToOIDCConfiguration(java.util.Map<String, Object> json) {
         if (json == null) return null;
         try {
             return objectMapper.convertValue(json, OIDCConfiguration.class);
@@ -55,7 +58,7 @@ public interface OIDCProviderConfigEntityMapper {
     }
     
     @Named("oidcConfigurationToJson")
-    default java.util.Map<String, Object> oidcConfigurationToJson(OIDCConfiguration config) {
+    protected java.util.Map<String, Object> oidcConfigurationToJson(OIDCConfiguration config) {
         if (config == null) return null;
         try {
             return objectMapper.convertValue(config, new TypeReference<java.util.Map<String, Object>>() {});
@@ -65,7 +68,7 @@ public interface OIDCProviderConfigEntityMapper {
     }
     
     @Named("jsonToAttributeMappingConfig")
-    default AttributeMappingConfig jsonToAttributeMappingConfig(java.util.Map<String, Object> json) {
+    protected AttributeMappingConfig jsonToAttributeMappingConfig(java.util.Map<String, Object> json) {
         if (json == null) return null;
         try {
             return objectMapper.convertValue(json, AttributeMappingConfig.class);
@@ -75,7 +78,7 @@ public interface OIDCProviderConfigEntityMapper {
     }
     
     @Named("attributeMappingConfigToJson")
-    default java.util.Map<String, Object> attributeMappingConfigToJson(AttributeMappingConfig config) {
+    protected java.util.Map<String, Object> attributeMappingConfigToJson(AttributeMappingConfig config) {
         if (config == null) return null;
         try {
             return objectMapper.convertValue(config, new TypeReference<java.util.Map<String, Object>>() {});
@@ -85,7 +88,7 @@ public interface OIDCProviderConfigEntityMapper {
     }
     
     @Named("jsonToRoleMappingConfig")
-    default RoleMappingConfig jsonToRoleMappingConfig(java.util.Map<String, Object> json) {
+    protected RoleMappingConfig jsonToRoleMappingConfig(java.util.Map<String, Object> json) {
         if (json == null) return null;
         try {
             return objectMapper.convertValue(json, RoleMappingConfig.class);
@@ -95,7 +98,7 @@ public interface OIDCProviderConfigEntityMapper {
     }
     
     @Named("roleMappingConfigToJson")
-    default java.util.Map<String, Object> roleMappingConfigToJson(RoleMappingConfig config) {
+    protected java.util.Map<String, Object> roleMappingConfigToJson(RoleMappingConfig config) {
         if (config == null) return null;
         try {
             return objectMapper.convertValue(config, new TypeReference<java.util.Map<String, Object>>() {});
@@ -105,7 +108,7 @@ public interface OIDCProviderConfigEntityMapper {
     }
     
     @Named("jsonToJITProvisioningConfig")
-    default JITProvisioningConfig jsonToJITProvisioningConfig(java.util.Map<String, Object> json) {
+    protected JITProvisioningConfig jsonToJITProvisioningConfig(java.util.Map<String, Object> json) {
         if (json == null) return null;
         try {
             return objectMapper.convertValue(json, JITProvisioningConfig.class);
@@ -115,13 +118,18 @@ public interface OIDCProviderConfigEntityMapper {
     }
     
     @Named("jitProvisioningConfigToJson")
-    default java.util.Map<String, Object> jitProvisioningConfigToJson(JITProvisioningConfig config) {
+    protected java.util.Map<String, Object> jitProvisioningConfigToJson(JITProvisioningConfig config) {
         if (config == null) return null;
         try {
             return objectMapper.convertValue(config, new TypeReference<java.util.Map<String, Object>>() {});
         } catch (Exception e) {
             throw new RuntimeException("Failed to serialize JITProvisioningConfig", e);
         }
+    }
+    
+    @Named("uuidToOIDCProviderConfigId")
+    protected OIDCProviderConfigId uuidToOIDCProviderConfigId(java.util.UUID uuid) {
+        return uuid != null ? OIDCProviderConfigId.of(uuid) : null;
     }
 }
 
