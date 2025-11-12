@@ -1,11 +1,11 @@
 package me.namila.service.auth.domain.application.port.authorization;
 
 import me.namila.service.auth.domain.core.authorization.model.PolicyAggregate;
+import me.namila.service.auth.domain.core.authorization.model.id.PolicyId;
 import me.namila.service.auth.domain.core.authorization.valueobject.PolicyType;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.UUID;
 
 /**
  * Repository port for Policy aggregate root.
@@ -24,7 +24,7 @@ public interface PolicyRepositoryPort {
      * @param policyId The policy ID
      * @return Optional containing the policy if found
      */
-    Optional<PolicyAggregate> findById(UUID policyId);
+    Optional<PolicyAggregate> findById(PolicyId policyId);
     
     /**
      * Find a policy by name.
@@ -63,6 +63,6 @@ public interface PolicyRepositoryPort {
      * Delete a policy by ID.
      * @param policyId The policy ID
      */
-    void deleteById(UUID policyId);
+    void deleteById(PolicyId policyId);
 }
 

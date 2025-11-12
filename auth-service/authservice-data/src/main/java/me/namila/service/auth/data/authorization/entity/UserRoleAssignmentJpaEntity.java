@@ -6,7 +6,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import me.namila.service.auth.data.identity.entity.UserEntity;
+import me.namila.service.auth.data.identity.entity.UserJpaEntity;
 
 import java.time.Instant;
 import java.util.UUID;
@@ -21,7 +21,8 @@ import java.util.UUID;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class UserRoleAssignmentEntity {
+public class UserRoleAssignmentJpaEntity
+{
     
     @Id
     @Column(name = "assignment_id")
@@ -29,11 +30,11 @@ public class UserRoleAssignmentEntity {
     
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
-    private UserEntity user;
+    private UserJpaEntity user;
     
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "role_id", nullable = false)
-    private RoleEntity role;
+    private RoleJpaEntity role;
     
     @Column(name = "scope", nullable = false, length = 50)
     private String scope;

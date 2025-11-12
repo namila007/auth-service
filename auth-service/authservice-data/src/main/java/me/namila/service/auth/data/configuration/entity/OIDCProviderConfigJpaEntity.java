@@ -23,7 +23,8 @@ import java.util.UUID;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class OIDCProviderConfigEntity {
+public class OIDCProviderConfigJpaEntity
+{
     
     @Id
     @Column(name = "provider_id")

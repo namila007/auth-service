@@ -2,7 +2,7 @@ package me.namila.service.auth.data.configuration.mapper;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import me.namila.service.auth.data.configuration.entity.OIDCProviderConfigEntity;
+import me.namila.service.auth.data.configuration.entity.OIDCProviderConfigJpaEntity;
 import me.namila.service.auth.domain.core.configuration.model.*;
 import me.namila.service.auth.domain.core.configuration.model.id.OIDCProviderConfigId;
 import me.namila.service.auth.domain.core.configuration.valueobject.ProviderType;
@@ -11,6 +11,10 @@ import org.mapstruct.Mapping;
 import org.mapstruct.Named;
 import org.mapstruct.ReportingPolicy;
 import org.springframework.beans.factory.annotation.Autowired;
+
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 
 /**
  * MapStruct mapper for OIDCProviderConfig Entity-Domain conversion.
@@ -27,7 +31,10 @@ public abstract class OIDCProviderConfigEntityMapper {
     @Mapping(target = "attributeMapping", source = "attributeMapping", qualifiedByName = "jsonToAttributeMappingConfig")
     @Mapping(target = "roleMapping", source = "roleMapping", qualifiedByName = "jsonToRoleMappingConfig")
     @Mapping(target = "jitProvisioning", source = "jitProvisioning", qualifiedByName = "jsonToJITProvisioningConfig")
-    public abstract     OIDCProviderConfigAggregate toDomain(OIDCProviderConfigEntity entity);
+    @Mapping(target = "createdAt", source = "createdAt", qualifiedByName = "instantToLocalDateTime")
+    @Mapping(target = "updatedAt", source = "lastModifiedAt", qualifiedByName = "instantToLocalDateTime")
+    @Mapping(target = "version", ignore = true)
+    public abstract OIDCProviderConfigAggregate toDomain(OIDCProviderConfigJpaEntity entity);
     
     @Mapping(target = "providerId", source = "id.value")
     @Mapping(target = "providerType", source = "providerType", qualifiedByName = "providerTypeToString")
@@ -35,7 +42,10 @@ public abstract class OIDCProviderConfigEntityMapper {
     @Mapping(target = "attributeMapping", source = "attributeMapping", qualifiedByName = "attributeMappingConfigToJson")
     @Mapping(target = "roleMapping", source = "roleMapping", qualifiedByName = "roleMappingConfigToJson")
     @Mapping(target = "jitProvisioning", source = "jitProvisioning", qualifiedByName = "jitProvisioningConfigToJson")
-    public abstract OIDCProviderConfigEntity toEntity(OIDCProviderConfigAggregate domain);
+    @Mapping(target = "createdAt", source = "createdAt", qualifiedByName = "localDateTimeToInstant")
+    @Mapping(target = "lastModifiedAt", source = "updatedAt", qualifiedByName = "localDateTimeToInstant")
+    @Mapping(target = "version", ignore = true)
+    public abstract OIDCProviderConfigJpaEntity toEntity(OIDCProviderConfigAggregate domain);
     
     @Named("stringToProviderType")
     protected ProviderType stringToProviderType(String providerType) {
@@ -130,6 +140,16 @@ public abstract class OIDCProviderConfigEntityMapper {
     @Named("uuidToOIDCProviderConfigId")
     protected OIDCProviderConfigId uuidToOIDCProviderConfigId(java.util.UUID uuid) {
         return uuid != null ? OIDCProviderConfigId.of(uuid) : null;
+    }
+    
+    @Named("instantToLocalDateTime")
+    protected LocalDateTime instantToLocalDateTime(Instant instant) {
+        return instant != null ? LocalDateTime.ofInstant(instant, ZoneOffset.UTC) : null;
+    }
+    
+    @Named("localDateTimeToInstant")
+    protected Instant localDateTimeToInstant(LocalDateTime localDateTime) {
+        return localDateTime != null ? localDateTime.toInstant(ZoneOffset.UTC) : null;
     }
 }
 

@@ -5,11 +5,11 @@ import me.namila.service.auth.data.configuration.mapper.OIDCProviderConfigEntity
 import me.namila.service.auth.data.configuration.repository.OIDCProviderConfigJpaRepository;
 import me.namila.service.auth.domain.application.port.configuration.OIDCProviderConfigRepositoryPort;
 import me.namila.service.auth.domain.core.configuration.model.OIDCProviderConfigAggregate;
+import me.namila.service.auth.domain.core.configuration.model.id.OIDCProviderConfigId;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.UUID;
 import java.util.stream.Collectors;
 
 /**
@@ -31,8 +31,8 @@ public class OIDCProviderConfigRepositoryAdapter implements OIDCProviderConfigRe
     }
     
     @Override
-    public Optional<OIDCProviderConfigAggregate> findById(UUID providerId) {
-        return jpaRepository.findById(providerId)
+    public Optional<OIDCProviderConfigAggregate> findById(OIDCProviderConfigId providerId) {
+        return jpaRepository.findById(providerId.getValue())
             .map(mapper::toDomain);
     }
     
@@ -62,8 +62,8 @@ public class OIDCProviderConfigRepositoryAdapter implements OIDCProviderConfigRe
     }
     
     @Override
-    public void deleteById(UUID providerId) {
-        jpaRepository.deleteById(providerId);
+    public void deleteById(OIDCProviderConfigId providerId) {
+        jpaRepository.deleteById(providerId.getValue());
     }
 }
 

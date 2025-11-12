@@ -24,7 +24,8 @@ import java.util.UUID;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class PermissionEntity {
+public class PermissionJpaEntity
+{
     
     @Id
     @Column(name = "permission_id")

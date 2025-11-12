@@ -1,6 +1,6 @@
 package me.namila.service.auth.data.authorization.mapper;
 
-import me.namila.service.auth.data.authorization.entity.PolicyEntity;
+import me.namila.service.auth.data.authorization.entity.PolicyJpaEntity;
 import me.namila.service.auth.domain.core.authorization.model.PolicyAggregate;
 import me.namila.service.auth.domain.core.authorization.model.id.PolicyId;
 import me.namila.service.auth.domain.core.authorization.valueobject.Effect;
@@ -11,15 +11,18 @@ import org.junit.jupiter.api.Test;
 import org.mapstruct.factory.Mappers;
 
 import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.*;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Unit tests for PolicyEntityMapper.
  */
 @DisplayName("PolicyEntityMapper Tests")
-class PolicyEntityMapperTest {
+class PolicyJpaEntityMapperTest
+{
 
     private PolicyEntityMapper mapper;
 
@@ -29,7 +32,7 @@ class PolicyEntityMapperTest {
     }
 
     @Test
-    @DisplayName("Should map PolicyEntity to PolicyAggregate domain model")
+    @DisplayName("Should map PolicyJpaEntity to PolicyAggregate domain model")
     void shouldMapEntityToDomain() {
         // Given
         UUID policyId = UUID.randomUUID();
@@ -42,7 +45,7 @@ class PolicyEntityMapperTest {
         Map<String, Object> conditions = new HashMap<>();
         conditions.put("time", "9-17");
 
-        PolicyEntity entity = PolicyEntity.builder()
+        PolicyJpaEntity entity = PolicyJpaEntity.builder()
                 .policyId(policyId)
                 .policyName("test-policy")
                 .policyType("ABAC")
@@ -62,23 +65,25 @@ class PolicyEntityMapperTest {
         PolicyAggregate domain = mapper.toDomain(entity);
 
         // Then
-        assertThat(domain).isNotNull();
-        assertThat(domain.getId()).isNotNull();
-        assertThat(domain.getId().getValue()).isEqualTo(policyId);
-        assertThat(domain.getPolicyName()).isEqualTo("test-policy");
-        assertThat(domain.getPolicyType()).isEqualTo(PolicyType.ABAC);
-        assertThat(domain.getEffect()).isEqualTo(Effect.PERMIT);
-        assertThat(domain.getSubjects()).isEqualTo(subjects);
-        assertThat(domain.getResources()).isEqualTo(resources);
-        assertThat(domain.getActions()).containsExactlyInAnyOrderElementsOf(actions);
-        assertThat(domain.getConditions()).isEqualTo(conditions);
-        assertThat(domain.getPriority()).isEqualTo(10);
-        assertThat(domain.getEnabled()).isTrue();
-        assertThat(domain.getVersion()).isEqualTo(1);
+        assertNotNull(domain);
+        assertNotNull(domain.getId());
+        assertEquals(policyId, domain.getId().getValue());
+        assertEquals("test-policy", domain.getPolicyName());
+        assertEquals(PolicyType.ABAC, domain.getPolicyType());
+        assertEquals(Effect.PERMIT, domain.getEffect());
+        assertEquals(subjects, domain.getSubjects());
+        assertEquals(resources, domain.getResources());
+        assertTrue(domain.getActions().containsAll(actions) && actions.containsAll(domain.getActions()));
+        assertEquals(conditions, domain.getConditions());
+        assertEquals(10, domain.getPriority());
+        assertTrue(domain.getEnabled());
+        assertEquals(1, domain.getVersion());
+        assertEquals(LocalDateTime.ofInstant(now, ZoneOffset.UTC), domain.getCreatedAt());
+        assertEquals(LocalDateTime.ofInstant(now, ZoneOffset.UTC), domain.getUpdatedAt());
     }
 
     @Test
-    @DisplayName("Should map PolicyAggregate domain model to PolicyEntity")
+    @DisplayName("Should map PolicyAggregate domain model to PolicyJpaEntity")
     void shouldMapDomainToEntity() {
         // Given
         PolicyId policyId = PolicyId.generate();
@@ -90,6 +95,7 @@ class PolicyEntityMapperTest {
         Map<String, Object> conditions = new HashMap<>();
         conditions.put("time", "9-17");
 
+        LocalDateTime now = LocalDateTime.now();
         PolicyAggregate domain = PolicyAggregate.builder()
                 .id(policyId)
                 .policyName("test-policy")
@@ -102,31 +108,67 @@ class PolicyEntityMapperTest {
                 .priority(10)
                 .enabled(true)
                 .version(1)
+                .createdAt(now)
+                .updatedAt(now)
                 .build();
 
         // When
-        PolicyEntity entity = mapper.toEntity(domain);
+        PolicyJpaEntity entity = mapper.toEntity(domain);
 
         // Then
-        assertThat(entity).isNotNull();
-        assertThat(entity.getPolicyId()).isEqualTo(policyId.getValue());
-        assertThat(entity.getPolicyName()).isEqualTo("test-policy");
-        assertThat(entity.getPolicyType()).isEqualTo("ABAC");
-        assertThat(entity.getEffect()).isEqualTo("PERMIT");
-        assertThat(entity.getSubjects()).isEqualTo(subjects);
-        assertThat(entity.getResources()).isEqualTo(resources);
-        assertThat(entity.getActions()).containsExactlyInAnyOrderElementsOf(actions);
-        assertThat(entity.getConditions()).isEqualTo(conditions);
-        assertThat(entity.getPriority()).isEqualTo(10);
-        assertThat(entity.getEnabled()).isTrue();
-        assertThat(entity.getVersion()).isEqualTo(1);
+        assertNotNull(entity);
+        assertEquals(policyId.getValue(), entity.getPolicyId());
+        assertEquals("test-policy", entity.getPolicyName());
+        assertEquals("ABAC", entity.getPolicyType());
+        assertEquals("PERMIT", entity.getEffect());
+        assertEquals(subjects, entity.getSubjects());
+        assertEquals(resources, entity.getResources());
+        assertTrue(entity.getActions().containsAll(actions) && actions.containsAll(entity.getActions()));
+        assertEquals(conditions, entity.getConditions());
+        assertEquals(10, entity.getPriority());
+        assertTrue(entity.getEnabled());
+        assertEquals(1, entity.getVersion());
+        // Note: createdAt and lastModifiedAt are set from domain's createdAt/updatedAt (LocalDateTime)
+        // which are converted to Instant
+    }
+    
+    @Test
+    @DisplayName("Should convert timestamps correctly between Instant and LocalDateTime")
+    void shouldConvertTimestampsCorrectly() {
+        // Given
+        Instant instant = Instant.now();
+        LocalDateTime expectedLocalDateTime = LocalDateTime.ofInstant(instant, ZoneOffset.UTC);
+        
+        PolicyJpaEntity entity = PolicyJpaEntity.builder()
+                .policyId(UUID.randomUUID())
+                .policyName("test-policy")
+                .policyType("ABAC")
+                .effect("PERMIT")
+                .priority(0)
+                .enabled(true)
+                .version(1)
+                .createdAt(instant)
+                .lastModifiedAt(instant)
+                .build();
+
+        // When
+        PolicyAggregate domain = mapper.toDomain(entity);
+
+        // Then
+        assertEquals(expectedLocalDateTime, domain.getCreatedAt());
+        assertEquals(expectedLocalDateTime, domain.getUpdatedAt());
+
+        // Reverse mapping
+        PolicyJpaEntity mappedEntity = mapper.toEntity(domain);
+        assertEquals(instant, mappedEntity.getCreatedAt());
+        assertEquals(instant, mappedEntity.getLastModifiedAt());
     }
 
     @Test
     @DisplayName("Should handle null values when mapping entity to domain")
     void shouldHandleNullValuesEntityToDomain() {
         // Given
-        PolicyEntity entity = PolicyEntity.builder()
+        PolicyJpaEntity entity = PolicyJpaEntity.builder()
                 .policyId(UUID.randomUUID())
                 .policyName("test-policy")
                 .policyType("ABAC")
@@ -146,11 +188,11 @@ class PolicyEntityMapperTest {
         PolicyAggregate domain = mapper.toDomain(entity);
 
         // Then
-        assertThat(domain).isNotNull();
-        assertThat(domain.getSubjects()).isNotNull();
-        assertThat(domain.getResources()).isNotNull();
-        assertThat(domain.getActions()).isNotNull();
-        assertThat(domain.getConditions()).isNotNull();
+        assertNotNull(domain);
+        assertNotNull(domain.getSubjects());
+        assertNotNull(domain.getResources());
+        assertNotNull(domain.getActions());
+        assertNotNull(domain.getConditions());
     }
 
     @Test
@@ -158,7 +200,7 @@ class PolicyEntityMapperTest {
     void shouldConvertListToSetForActions() {
         // Given
         List<String> actionsList = Arrays.asList("read", "write", "read"); // duplicate
-        PolicyEntity entity = PolicyEntity.builder()
+        PolicyJpaEntity entity = PolicyJpaEntity.builder()
                 .policyId(UUID.randomUUID())
                 .policyName("test-policy")
                 .policyType("ABAC")
@@ -175,9 +217,9 @@ class PolicyEntityMapperTest {
         PolicyAggregate domain = mapper.toDomain(entity);
 
         // Then
-        assertThat(domain.getActions()).isInstanceOf(Set.class);
-        assertThat(domain.getActions()).hasSize(2); // duplicates removed
-        assertThat(domain.getActions()).containsExactlyInAnyOrder("read", "write");
+        assertInstanceOf(Set.class, domain.getActions());
+        assertEquals(2, domain.getActions().size()); // duplicates removed
+        assertTrue(domain.getActions().containsAll(Set.of("read", "write")));
     }
 
     @Test
@@ -197,11 +239,11 @@ class PolicyEntityMapperTest {
                 .build();
 
         // When
-        PolicyEntity entity = mapper.toEntity(domain);
+        PolicyJpaEntity entity = mapper.toEntity(domain);
 
         // Then
-        assertThat(entity.getActions()).isInstanceOf(List.class);
-        assertThat(entity.getActions()).containsExactlyInAnyOrderElementsOf(actionsSet);
+        assertInstanceOf(List.class, entity.getActions());
+        assertTrue(entity.getActions().containsAll(actionsSet) && actionsSet.containsAll(entity.getActions()));
     }
 
     @Test
@@ -209,7 +251,7 @@ class PolicyEntityMapperTest {
     void shouldMapAllPolicyTypeValues() {
         for (PolicyType policyType : PolicyType.values()) {
             // Given
-            PolicyEntity entity = PolicyEntity.builder()
+            PolicyJpaEntity entity = PolicyJpaEntity.builder()
                     .policyId(UUID.randomUUID())
                     .policyName("test-policy")
                     .policyType(policyType.name())
@@ -225,11 +267,11 @@ class PolicyEntityMapperTest {
             PolicyAggregate domain = mapper.toDomain(entity);
 
             // Then
-            assertThat(domain.getPolicyType()).isEqualTo(policyType);
+            assertEquals(policyType, domain.getPolicyType());
 
             // Reverse mapping
-            PolicyEntity mappedEntity = mapper.toEntity(domain);
-            assertThat(mappedEntity.getPolicyType()).isEqualTo(policyType.name());
+            PolicyJpaEntity mappedEntity = mapper.toEntity(domain);
+            assertEquals(policyType.name(), mappedEntity.getPolicyType());
         }
     }
 
@@ -238,7 +280,7 @@ class PolicyEntityMapperTest {
     void shouldMapAllEffectValues() {
         for (Effect effect : Effect.values()) {
             // Given
-            PolicyEntity entity = PolicyEntity.builder()
+            PolicyJpaEntity entity = PolicyJpaEntity.builder()
                     .policyId(UUID.randomUUID())
                     .policyName("test-policy")
                     .policyType("ABAC")
@@ -254,11 +296,11 @@ class PolicyEntityMapperTest {
             PolicyAggregate domain = mapper.toDomain(entity);
 
             // Then
-            assertThat(domain.getEffect()).isEqualTo(effect);
+            assertEquals(effect, domain.getEffect());
 
             // Reverse mapping
-            PolicyEntity mappedEntity = mapper.toEntity(domain);
-            assertThat(mappedEntity.getEffect()).isEqualTo(effect.name());
+            PolicyJpaEntity mappedEntity = mapper.toEntity(domain);
+            assertEquals(effect.name(), mappedEntity.getEffect());
         }
     }
 
@@ -284,15 +326,15 @@ class PolicyEntityMapperTest {
                 .build();
 
         // When
-        PolicyEntity entity = mapper.toEntity(originalDomain);
+        PolicyJpaEntity entity = mapper.toEntity(originalDomain);
         PolicyAggregate mappedDomain = mapper.toDomain(entity);
 
         // Then
-        assertThat(mappedDomain.getId().getValue()).isEqualTo(originalDomain.getId().getValue());
-        assertThat(mappedDomain.getPolicyName()).isEqualTo(originalDomain.getPolicyName());
-        assertThat(mappedDomain.getPolicyType()).isEqualTo(originalDomain.getPolicyType());
-        assertThat(mappedDomain.getEffect()).isEqualTo(originalDomain.getEffect());
-        assertThat(mappedDomain.getActions()).isEqualTo(originalDomain.getActions());
+        assertEquals(originalDomain.getId().getValue(), mappedDomain.getId().getValue());
+        assertEquals(originalDomain.getPolicyName(), mappedDomain.getPolicyName());
+        assertEquals(originalDomain.getPolicyType(), mappedDomain.getPolicyType());
+        assertEquals(originalDomain.getEffect(), mappedDomain.getEffect());
+        assertEquals(originalDomain.getActions(), mappedDomain.getActions());
     }
 }
 

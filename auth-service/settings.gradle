@@ -1,11 +1,8 @@
-rootProject.name = "auth-service"
+rootProject.name = 'auth-service'
 
-include(
-    "auth-service-common",
-    "authservice-application",
-    "authservice-domain",
-    "authservice-domain:domain-core",
-    "authservice-domain:domain-application",
-    "authservice-data"
-)
+include("auth-service-common")
+include("authservice-application")
+include("authservice-domain:domain-application")
+include("authservice-domain:domain-core")
+include("authservice-data")
 

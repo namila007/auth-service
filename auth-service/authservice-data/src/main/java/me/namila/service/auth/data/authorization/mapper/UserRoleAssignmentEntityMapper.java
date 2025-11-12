@@ -1,7 +1,6 @@
 package me.namila.service.auth.data.authorization.mapper;
 
-import me.namila.service.auth.data.authorization.entity.UserRoleAssignmentEntity;
-import me.namila.service.auth.data.identity.entity.UserEntity;
+import me.namila.service.auth.data.authorization.entity.UserRoleAssignmentJpaEntity;
 import me.namila.service.auth.domain.core.authorization.model.UserRoleAssignmentAggregate;
 import me.namila.service.auth.domain.core.authorization.model.id.UserRoleAssignmentId;
 import me.namila.service.auth.domain.core.identity.model.id.UserId;
@@ -24,14 +23,18 @@ public interface UserRoleAssignmentEntityMapper {
     @Mapping(target = "status", source = "status", qualifiedByName = "stringToAssignmentStatus")
     @Mapping(target = "userId", source = "user.userId", qualifiedByName = "uuidToUserId")
     @Mapping(target = "roleId", source = "role.roleId", qualifiedByName = "uuidToRoleId")
-    UserRoleAssignmentAggregate toDomain(UserRoleAssignmentEntity entity);
+    @Mapping(target = "assignedBy", source = "assignedBy", qualifiedByName = "uuidToUserId")
+    @Mapping(target = "createdAt", ignore = true)
+    @Mapping(target = "updatedAt", ignore = true)
+    UserRoleAssignmentAggregate toDomain(UserRoleAssignmentJpaEntity entity);
     
     @Mapping(target = "assignmentId", source = "id.value")
     @Mapping(target = "scope", source = "scope", qualifiedByName = "assignmentScopeToString")
     @Mapping(target = "status", source = "status", qualifiedByName = "assignmentStatusToString")
     @Mapping(target = "user", ignore = true)
     @Mapping(target = "role", ignore = true)
-    UserRoleAssignmentEntity toEntity(UserRoleAssignmentAggregate domain);
+    @Mapping(target = "assignedBy", source = "assignedBy.value")
+    UserRoleAssignmentJpaEntity toEntity(UserRoleAssignmentAggregate domain);
     
     @Named("stringToAssignmentScope")
     default AssignmentScope stringToAssignmentScope(String scope) {

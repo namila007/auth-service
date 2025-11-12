@@ -1,6 +1,6 @@
 package me.namila.service.auth.data.authorization.repository;
 
-import me.namila.service.auth.data.authorization.entity.PolicyEntity;
+import me.namila.service.auth.data.authorization.entity.PolicyJpaEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -9,17 +9,17 @@ import java.util.Optional;
 import java.util.UUID;
 
 /**
- * Spring Data JPA repository for PolicyEntity.
+ * Spring Data JPA repository for PolicyJpaEntity.
  */
 @Repository
-public interface PolicyJpaRepository extends JpaRepository<PolicyEntity, UUID> {
+public interface PolicyJpaRepository extends JpaRepository<PolicyJpaEntity, UUID> {
     
-    Optional<PolicyEntity> findByPolicyName(String policyName);
+    Optional<PolicyJpaEntity> findByPolicyName(String policyName);
     
-    List<PolicyEntity> findByEnabledTrue();
+    List<PolicyJpaEntity> findByEnabledTrue();
     
-    List<PolicyEntity> findByPolicyType(String policyType);
+    List<PolicyJpaEntity> findByPolicyType(String policyType);
     
-    List<PolicyEntity> findByPolicyTypeAndEnabledTrue(String policyType);
+    List<PolicyJpaEntity> findByPolicyTypeAndEnabledTrue(String policyType);
 }
 

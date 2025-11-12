@@ -5,12 +5,12 @@ import me.namila.service.auth.data.authorization.mapper.PolicyEntityMapper;
 import me.namila.service.auth.data.authorization.repository.PolicyJpaRepository;
 import me.namila.service.auth.domain.application.port.authorization.PolicyRepositoryPort;
 import me.namila.service.auth.domain.core.authorization.model.PolicyAggregate;
+import me.namila.service.auth.domain.core.authorization.model.id.PolicyId;
 import me.namila.service.auth.domain.core.authorization.valueobject.PolicyType;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.UUID;
 import java.util.stream.Collectors;
 
 /**
@@ -31,8 +31,8 @@ public class PolicyRepositoryAdapter implements PolicyRepositoryPort {
     }
     
     @Override
-    public Optional<PolicyAggregate> findById(UUID policyId) {
-        return jpaRepository.findById(policyId)
+    public Optional<PolicyAggregate> findById(PolicyId policyId) {
+        return jpaRepository.findById(policyId.getValue())
             .map(mapper::toDomain);
     }
     
@@ -71,8 +71,8 @@ public class PolicyRepositoryAdapter implements PolicyRepositoryPort {
     }
     
     @Override
-    public void deleteById(UUID policyId) {
-        jpaRepository.deleteById(policyId);
+    public void deleteById(PolicyId policyId) {
+        jpaRepository.deleteById(policyId.getValue());
     }
 }
 

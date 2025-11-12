@@ -1,6 +1,6 @@
 package me.namila.service.auth.data.governance.repository;
 
-import me.namila.service.auth.data.governance.entity.AuditLogEntity;
+import me.namila.service.auth.data.governance.entity.AuditLogJpaEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -11,22 +11,22 @@ import java.util.List;
 import java.util.UUID;
 
 /**
- * Spring Data JPA repository for AuditLogEntity.
+ * Spring Data JPA repository for AuditLogJpaEntity.
  */
 @Repository
-public interface AuditLogJpaRepository extends JpaRepository<AuditLogEntity, UUID> {
+public interface AuditLogJpaRepository extends JpaRepository<AuditLogJpaEntity, UUID> {
     
-    List<AuditLogEntity> findByActorId(UUID actorId);
+    List<AuditLogJpaEntity> findByActorId(UUID actorId);
     
-    List<AuditLogEntity> findBySubjectId(UUID subjectId);
+    List<AuditLogJpaEntity> findBySubjectId(UUID subjectId);
     
-    List<AuditLogEntity> findByEventType(String eventType);
+    List<AuditLogJpaEntity> findByEventType(String eventType);
     
-    List<AuditLogEntity> findByCorrelationId(String correlationId);
+    List<AuditLogJpaEntity> findByCorrelationId(String correlationId);
     
-    @Query("SELECT a FROM AuditLogEntity a WHERE a.timestamp BETWEEN :startTime AND :endTime")
-    List<AuditLogEntity> findByTimestampBetween(@Param("startTime") Instant startTime, @Param("endTime") Instant endTime);
+    @Query("SELECT a FROM AuditLogJpaEntity a WHERE a.timestamp BETWEEN :startTime AND :endTime")
+    List<AuditLogJpaEntity> findByTimestampBetween(@Param("startTime") Instant startTime, @Param("endTime") Instant endTime);
     
-    List<AuditLogEntity> findByResource(String resource);
+    List<AuditLogJpaEntity> findByResource(String resource);
 }
 

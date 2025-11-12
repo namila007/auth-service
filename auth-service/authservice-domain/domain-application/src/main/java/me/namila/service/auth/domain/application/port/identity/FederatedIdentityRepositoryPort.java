@@ -1,12 +1,12 @@
 package me.namila.service.auth.domain.application.port.identity;
 
+import me.namila.service.auth.domain.core.configuration.model.id.OIDCProviderConfigId;
 import me.namila.service.auth.domain.core.identity.model.FederatedIdentityEntity;
 import me.namila.service.auth.domain.core.identity.model.id.FederatedIdentityId;
 import me.namila.service.auth.domain.core.identity.model.id.UserId;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.UUID;
 
 /**
  * Repository port for FederatedIdentity entity.
@@ -40,7 +40,7 @@ public interface FederatedIdentityRepositoryPort {
      * @param subjectId The subject ID
      * @return Optional containing the federated identity if found
      */
-    Optional<FederatedIdentityEntity> findByProviderAndSubject(UUID providerId, String subjectId);
+    Optional<FederatedIdentityEntity> findByProviderAndSubject(OIDCProviderConfigId providerId, String subjectId);
     
     /**
      * Check if a federated identity exists for provider and subject.
@@ -48,7 +48,7 @@ public interface FederatedIdentityRepositoryPort {
      * @param subjectId The subject ID
      * @return true if exists
      */
-    boolean existsByProviderAndSubject(UUID providerId, String subjectId);
+    boolean existsByProviderAndSubject(OIDCProviderConfigId providerId, String subjectId);
     
     /**
      * Delete a federated identity by ID.

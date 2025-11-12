@@ -1,12 +1,12 @@
 package me.namila.service.auth.domain.application.port.governance;
 
 import me.namila.service.auth.domain.core.governance.model.AuditLogEntity;
+import me.namila.service.auth.domain.core.governance.model.id.AuditLogId;
 import me.namila.service.auth.domain.core.governance.valueobject.AuditEventType;
 
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
-import java.util.UUID;
 
 /**
  * Repository port for AuditLog entity.
@@ -25,21 +25,21 @@ public interface AuditLogRepositoryPort {
      * @param auditId The audit ID
      * @return Optional containing the audit log if found
      */
-    Optional<AuditLogEntity> findById(UUID auditId);
+    Optional<AuditLogEntity> findById(AuditLogId auditId);
     
     /**
      * Find audit logs by actor ID.
-     * @param actorId The actor ID
+     * @param actorId The actor ID (UUID - can reference different entity types)
      * @return List of audit logs for the actor
      */
-    List<AuditLogEntity> findByActorId(UUID actorId);
+    List<AuditLogEntity> findByActorId(java.util.UUID actorId);
     
     /**
      * Find audit logs by subject ID.
-     * @param subjectId The subject ID
+     * @param subjectId The subject ID (UUID - can reference different entity types)
      * @return List of audit logs for the subject
      */
-    List<AuditLogEntity> findBySubjectId(UUID subjectId);
+    List<AuditLogEntity> findBySubjectId(java.util.UUID subjectId);
     
     /**
      * Find audit logs by event type.

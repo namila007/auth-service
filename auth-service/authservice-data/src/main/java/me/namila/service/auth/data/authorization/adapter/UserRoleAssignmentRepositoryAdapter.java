@@ -5,14 +5,16 @@ import me.namila.service.auth.data.authorization.mapper.UserRoleAssignmentEntity
 import me.namila.service.auth.data.authorization.repository.UserRoleAssignmentJpaRepository;
 import me.namila.service.auth.domain.application.port.authorization.UserRoleAssignmentRepositoryPort;
 import me.namila.service.auth.domain.core.authorization.model.UserRoleAssignmentAggregate;
+import me.namila.service.auth.domain.core.authorization.model.id.RoleId;
+import me.namila.service.auth.domain.core.authorization.model.id.UserRoleAssignmentId;
 import me.namila.service.auth.domain.core.authorization.valueobject.AssignmentScope;
 import me.namila.service.auth.domain.core.authorization.valueobject.AssignmentStatus;
+import me.namila.service.auth.domain.core.identity.model.id.UserId;
 import org.springframework.stereotype.Component;
 
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
-import java.util.UUID;
 import java.util.stream.Collectors;
 
 /**
@@ -33,37 +35,37 @@ public class UserRoleAssignmentRepositoryAdapter implements UserRoleAssignmentRe
     }
     
     @Override
-    public Optional<UserRoleAssignmentAggregate> findById(UUID assignmentId) {
-        return jpaRepository.findById(assignmentId)
+    public Optional<UserRoleAssignmentAggregate> findById(UserRoleAssignmentId assignmentId) {
+        return jpaRepository.findById(assignmentId.getValue())
             .map(mapper::toDomain);
     }
     
     @Override
-    public List<UserRoleAssignmentAggregate> findByUserId(UUID userId) {
-        return jpaRepository.findByUser_UserId(userId).stream()
+    public List<UserRoleAssignmentAggregate> findByUserId(UserId userId) {
+        return jpaRepository.findByUser_UserId(userId.getValue()).stream()
             .map(mapper::toDomain)
             .collect(Collectors.toList());
     }
     
     @Override
-    public List<UserRoleAssignmentAggregate> findActiveByUserId(UUID userId) {
+    public List<UserRoleAssignmentAggregate> findActiveByUserId(UserId userId) {
         Instant now = Instant.now();
-        return jpaRepository.findByUser_UserId(userId).stream()
+        return jpaRepository.findByUser_UserId(userId.getValue()).stream()
             .map(mapper::toDomain)
             .filter(assignment -> assignment.isActive())
             .collect(Collectors.toList());
     }
     
     @Override
-    public List<UserRoleAssignmentAggregate> findByRoleId(UUID roleId) {
-        return jpaRepository.findByRole_RoleId(roleId).stream()
+    public List<UserRoleAssignmentAggregate> findByRoleId(RoleId roleId) {
+        return jpaRepository.findByRole_RoleId(roleId.getValue()).stream()
             .map(mapper::toDomain)
             .collect(Collectors.toList());
     }
     
     @Override
-    public List<UserRoleAssignmentAggregate> findByUserIdAndRoleId(UUID userId, UUID roleId) {
-        return jpaRepository.findByUser_UserIdAndRole_RoleId(userId, roleId).stream()
+    public List<UserRoleAssignmentAggregate> findByUserIdAndRoleId(UserId userId, RoleId roleId) {
+        return jpaRepository.findByUser_UserIdAndRole_RoleId(userId.getValue(), roleId.getValue()).stream()
             .map(mapper::toDomain)
             .collect(Collectors.toList());
     }
@@ -83,18 +85,18 @@ public class UserRoleAssignmentRepositoryAdapter implements UserRoleAssignmentRe
     }
     
     @Override
-    public void deleteById(UUID assignmentId) {
-        jpaRepository.deleteById(assignmentId);
+    public void deleteById(UserRoleAssignmentId assignmentId) {
+        jpaRepository.deleteById(assignmentId.getValue());
     }
     
     @Override
-    public void deleteByUserId(UUID userId) {
-        jpaRepository.deleteByUser_UserId(userId);
+    public void deleteByUserId(UserId userId) {
+        jpaRepository.deleteByUser_UserId(userId.getValue());
     }
     
     @Override
-    public void deleteByRoleId(UUID roleId) {
-        jpaRepository.deleteByRole_RoleId(roleId);
+    public void deleteByRoleId(RoleId roleId) {
+        jpaRepository.deleteByRole_RoleId(roleId.getValue());
     }
 }
 

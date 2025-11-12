@@ -5,6 +5,7 @@ import me.namila.service.auth.data.governance.mapper.AuditLogEntityMapper;
 import me.namila.service.auth.data.governance.repository.AuditLogJpaRepository;
 import me.namila.service.auth.domain.application.port.governance.AuditLogRepositoryPort;
 import me.namila.service.auth.domain.core.governance.model.AuditLogEntity;
+import me.namila.service.auth.domain.core.governance.model.id.AuditLogId;
 import me.namila.service.auth.domain.core.governance.valueobject.AuditEventType;
 import org.springframework.stereotype.Component;
 
@@ -33,8 +34,8 @@ public class AuditLogRepositoryAdapter implements AuditLogRepositoryPort {
     }
     
     @Override
-    public Optional<AuditLogEntity> findById(UUID auditId) {
-        return jpaRepository.findById(auditId)
+    public Optional<AuditLogEntity> findById(AuditLogId auditId) {
+        return jpaRepository.findById(auditId.getValue())
             .map(mapper::toDomain);
     }
     

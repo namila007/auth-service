@@ -23,7 +23,8 @@ import java.util.UUID;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class AuditLogEntity {
+public class AuditLogJpaEntity
+{
     
     @Id
     @Column(name = "audit_id")

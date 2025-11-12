@@ -23,7 +23,8 @@ import java.util.UUID;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class UserEntity {
+public class UserJpaEntity
+{
     
     @Id
     @Column(name = "user_id")

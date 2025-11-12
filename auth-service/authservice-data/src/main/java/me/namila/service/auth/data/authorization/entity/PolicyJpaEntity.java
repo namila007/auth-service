@@ -24,7 +24,8 @@ import java.util.UUID;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class PolicyEntity {
+public class PolicyJpaEntity
+{
     
     @Id
     @Column(name = "policy_id")

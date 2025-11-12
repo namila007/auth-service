@@ -19,6 +19,7 @@
 12. [API Design Patterns](#12-api-design-patterns)
 13. [Additional Resources](#13-additional-resources)
 14. [Summary of Key Architectural Decisions](#14-summary-of-key-architectural-decisions)
+15. [Aggregate Relationship Mapping](#15-aggregate-relationship-mapping)
 
 ---
 
@@ -494,15 +495,25 @@ public interface RoleSummaryProjection {
 - Avoids N+1 query problems
 - Supports pagination for both parent and child collections
 
+**JPA Entity Naming Convention**:
+- **Use `XJpaEntity` suffix**: All JPA entities in the data module must use the `JpaEntity` suffix
+- **Examples**: `UserJpaEntity`, `RoleJpaEntity`, `PolicyJpaEntity`, `AuditLogJpaEntity`
+- **Purpose**: Clear distinction between domain entities (`XEntity`) and JPA persistence entities (`XJpaEntity`)
+- **Benefits**:
+  - Prevents naming conflicts with domain entities
+  - Makes it clear which layer the entity belongs to
+  - Improves code readability and maintainability
+  - Aligns with DDD separation of concerns
+
 **Key Components**:
-- JPA Entity classes (persistence models)
+- JPA Entity classes (persistence models) - named as `XJpaEntity`
 - Spring Data JPA repositories
 - Projection interfaces for optimized queries
 - Database configuration classes
 - Redis configuration and clients
 - PostgreSQL connection settings
 - Adapter implementations (for domain ports)
-- Entity-to-Domain mappers (MapStruct)
+- Entity-to-Domain mappers (MapStruct) - maps `XJpaEntity` ↔ `XAggregate`/`XEntity`
 
 **Dependencies**:
 - Depends on `auth-service-common`
@@ -639,7 +650,7 @@ auth-service/
     └── src/
         └── main/java/me/namila/service/auth/data/
             ├── identity/           # Identity Context Package
-            │   ├── entity/          # JPA entities
+            │   ├── entity/          # JPA entities (XJpaEntity)
             │   ├── repository/     # Spring Data repositories
             │   ├── projection/     # Spring Data projections
             │   ├── adapter/        # Port implementations
@@ -1108,6 +1119,169 @@ Need full entity for updates/deletes?
     └─ NO → Use Projection (best performance)
 ```
 
+### 9.3 Aggregate Relationship Mapping Pattern
+
+**Pattern Overview**:
+When a domain aggregate references another aggregate, the mapping follows a specific pattern to maintain aggregate boundaries while allowing efficient queries. This pattern ensures that domain aggregates only reference other aggregates by ID, not by object references.
+
+**Key Principles**:
+1. **JPA Entity**: Has both FK columns AND lazy relationships
+   - FK columns (`userId`, `roleId`) are what get persisted to the database
+   - `@ManyToOne` relationships marked as `insertable=false, updatable=false` for read convenience only
+2. **Domain Aggregate**: References other aggregates by ID only (no object references)
+3. **MapStruct Mapping**:
+   - **Entity → Domain**: Extract IDs from relationships (`user.userId` → `userId`) OR from FK columns (`userId` → `userId`)
+   - **Domain → Entity**: Map IDs to FK columns (`userId.value` → `userId` FK column), ignore relationships
+4. **Updates**: Only modify the aggregate root's own fields, never foreign key IDs after creation
+
+**JPA Entity Structure** (Ideal Pattern):
+```java
+@Entity
+@Table(name = "user_role_assignments")
+public class UserRoleAssignmentJpaEntity {
+    @Id
+    @Column(name = "assignment_id")
+    private UUID assignmentId;
+    
+    // FK column - this is what gets persisted
+    @Column(name = "user_id", nullable = false)
+    private UUID userId;
+    
+    // Lazy relationship - for queries only, never updated
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", insertable = false, updatable = false)
+    private UserJpaEntity user;
+    
+    @Column(name = "role_id", nullable = false)
+    private UUID roleId;
+    
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "role_id", insertable = false, updatable = false)
+    private RoleJpaEntity role;
+    
+    // Own fields
+    private String scope;
+    private Instant effectiveFrom;
+}
+```
+
+**Domain Aggregate Structure**:
+```java
+public class UserRoleAssignmentAggregate extends BaseAggregate<UserRoleAssignmentId> {
+    private UserId userId;        // ID only, not UserAggregate object
+    private RoleId roleId;        // ID only, not RoleAggregate object
+    private AssignmentScope scope;
+    private Instant effectiveFrom;
+    
+    // Business logic methods that don't modify foreign aggregate IDs
+    public void updateScope(AssignmentScope newScope) {
+        this.scope = newScope;
+    }
+}
+```
+
+**MapStruct Mapper Pattern**:
+```java
+@Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
+public interface UserRoleAssignmentEntityMapper {
+    
+    // Entity → Domain: Extract IDs from relationships OR FK columns
+    @Mapping(target = "id", source = "assignmentId", qualifiedByName = "uuidToUserRoleAssignmentId")
+    // Option 1: Extract from relationship (when relationship is loaded)
+    @Mapping(target = "userId", source = "user.id", qualifiedByName = "uuidToUserId")
+    // Option 2: Extract from FK column directly (preferred - always works)
+    // @Mapping(target = "userId", source = "userId", qualifiedByName = "uuidToUserId")
+    @Mapping(target = "roleId", source = "role.id", qualifiedByName = "uuidToRoleId")
+    // OR: @Mapping(target = "roleId", source = "roleId", qualifiedByName = "uuidToRoleId")
+    UserRoleAssignmentAggregate toDomain(UserRoleAssignmentJpaEntity entity);
+    
+    // Domain → Entity: Map IDs to FK columns, ignore relationships
+    @Mapping(target = "assignmentId", source = "id.value")
+    @Mapping(target = "userId", source = "userId.value")  // Map to FK column
+    @Mapping(target = "roleId", source = "roleId.value")  // Map to FK column
+    @Mapping(target = "user", ignore = true)   // Never set relationship
+    @Mapping(target = "role", ignore = true)   // Never set relationship
+    UserRoleAssignmentJpaEntity toEntity(UserRoleAssignmentAggregate domain);
+}
+```
+
+**Why This Pattern Works**:
+- **Aggregate Boundaries Preserved**: Domain only knows IDs, not full objects
+- **No Accidental Cascades**: `insertable=false, updatable=false` prevents JPA from modifying FKs through relationships
+- **Query Convenience**: Can use `entity.getUser().getUsername()` in queries when relationships are loaded via JOIN FETCH
+- **Clear Intent**: Explicit that relationships are read-only
+- **MapStruct Safety**: Compiler-checked mappings, no runtime surprises
+- **Round-trip Integrity**: Domain → Entity → Domain preserves all ID references
+
+**Rules to Follow**:
+1. **Never call setters on relationship objects** in entity (user, role)
+2. **Never modify FK IDs** after entity creation (userId, roleId) - they represent aggregate references
+3. **Only update aggregate's own fields** (scope, effectiveFrom, etc.)
+4. **Use FK column directly** when creating new entities via mapper
+5. **Round-trip mapping preserves IDs**: Domain → Entity → Domain should preserve userId/roleId values
+
+**Common Scenarios**:
+
+**Creating New Assignment**:
+```java
+// Domain
+UserRoleAssignmentAggregate assignment = UserRoleAssignmentAggregate.builder()
+    .id(UserRoleAssignmentId.generate())
+    .userId(UserId.of("user-123"))  // Just ID
+    .roleId(RoleId.of("role-456"))  // Just ID
+    .scope(AssignmentScope.GLOBAL)
+    .build();
+
+// MapStruct maps IDs to FK columns
+UserRoleAssignmentJpaEntity entity = mapper.toEntity(assignment);
+// entity.userId = UUID("user-123")  // FK column set
+// entity.roleId = UUID("role-456")  // FK column set
+// entity.user = null (ignored)
+// entity.role = null (ignored)
+```
+
+**Updating Existing Assignment**:
+```java
+// Load from DB
+UserRoleAssignmentAggregate assignment = repository.findById(id).orElseThrow();
+
+// Modify only own fields
+assignment.updateScope(AssignmentScope.TENANT);
+
+// Save - FK columns unchanged
+repository.save(assignment);
+// Updates scope only, userId/roleId untouched
+```
+
+**Querying with Relationships**:
+```java
+// JPA Query using lazy relationship
+@Query("SELECT ura FROM UserRoleAssignmentJpaEntity ura " +
+       "JOIN FETCH ura.user " +
+       "WHERE ura.scope = :scope")
+List<UserRoleAssignmentJpaEntity> findAssignmentsWithUser(@Param("scope") String scope);
+
+// Map to domain - only IDs extracted
+List<UserRoleAssignmentAggregate> assignments = entities.stream()
+    .map(mapper::toDomain)
+    .collect(Collectors.toList());
+```
+
+**Anti-Patterns to Avoid**:
+- ❌ Setting relationship objects: `entity.setUser(userEntity)` - violates aggregate boundary
+- ❌ Modifying FK after creation: `entity.setUserId("new-user")` - changing aggregate reference
+- ❌ Mapping full objects to domain: `new UserRoleAssignment(id, userAggregate, ...)` - domain shouldn't know other aggregates
+- ✅ Set FK column on creation only: `entity.setUserId(userId)` via mapper
+- ✅ Update only own fields: `entity.setScope(newScope)`
+- ✅ Domain only knows IDs: `new UserRoleAssignment(id, UserId.of("user-123"), ...)`
+
+**Implementation Notes**:
+- If JPA entity only has `@JoinColumn` relationships without separate FK column fields, the mapper cannot set FK values when mapping domain → entity
+- To follow this pattern correctly, JPA entities must have both:
+  1. FK column fields (`@Column(name = "user_id") private UUID userId;`)
+  2. Lazy relationships (`@ManyToOne @JoinColumn(name = "user_id", insertable=false, updatable=false)`)
+- When FK columns exist, MapStruct can map domain IDs directly to FK columns, preserving values in round-trip mapping
+
 ### 9.3 JPA Best Practices
 
 **Transaction Management**:
@@ -1186,16 +1360,87 @@ public class UserJpaEntity extends BaseJpaEntity { }
 
 ### 9.5 Testing Strategy
 
-**Unit Tests**:
-- Domain core: Pure unit tests (no Spring)
-- Domain application: Mock dependencies
-- Application: Mock domain services
-- Data: Use Testcontainers for integration tests
+**Testing Framework**:
+- **JUnit 5**: Primary testing framework
+- **Mockito**: For mocking dependencies
+- **Testcontainers**: For integration tests with real databases
+- **Assertions**: Use JUnit Jupiter assertions (`org.junit.jupiter.api.Assertions`)
+
+**Unit Test Structure**:
+- Use `@DisplayName` for descriptive test names
+- Follow Arrange-Act-Assert (AAA) pattern
+- Use `@BeforeEach` for test setup
+- Keep tests focused on single behavior
+
+**Assertion Library**:
+- **Use JUnit Jupiter Assertions**: `org.junit.jupiter.api.Assertions.*`
+- **Do NOT use AssertJ**: Avoid `org.assertj.core.api.Assertions.assertThat()`
+- Import: `import static org.junit.jupiter.api.Assertions.*;`
+
+**Common Assertions**:
+- Null checks: `assertNotNull()`, `assertNull()`
+- Equality checks: `assertEquals(expected, actual)` (note: expected value comes first)
+- Boolean checks: `assertTrue()`, `assertFalse()`
+- Type checks: `assertInstanceOf(ExpectedClass.class, object)`
+- Collection checks: `assertEquals(expectedSize, collection.size())`, `assertTrue(collection.contains(element))`
+- Exception checks: `assertThrows(ExpectedException.class, () -> methodThatThrows())`
+
+**Unit Test Strategy by Layer**:
+
+**1. Domain Core Tests**:
+- Pure unit tests without Spring framework
+- Test domain logic, business rules, and invariants
+- Test aggregate and entity creation, validation, and behavior
+- Test value object immutability and validation
+- Use builder pattern with `@SuperBuilder` for test data setup
+- Test exception scenarios and edge cases
+
+**2. Domain Application Tests**:
+- Mock dependencies using Mockito (`@Mock`, `@InjectMocks`)
+- Use `@ExtendWith(MockitoExtension.class)` for JUnit 5
+- Test application service orchestration logic
+- Verify interactions with mocked repositories and mappers
+- Test use case scenarios and error handling
+- Verify DTO mapping and transformation
+
+**3. Mapper Tests**:
+- Test MapStruct mapper implementations
+- Initialize mapper using `Mappers.getMapper(MapperClass.class)`
+- Test bidirectional mapping (entity ↔ domain)
+- Test null handling and default values
+- Test enum conversions and value object mappings
+- Test timestamp conversions (Instant ↔ LocalDateTime)
+- Perform round-trip mapping tests to ensure data integrity
+
+**4. Adapter Tests**:
+- Mock JPA repositories and mappers
+- Test adapter implementations of domain ports
+- Verify correct conversion between domain IDs and UUIDs
+- Test repository method delegation and error handling
+- Verify mapper calls and result transformation
 
 **Integration Tests**:
+- Use `@SpringBootTest` for full application context
 - Use Testcontainers for PostgreSQL and Redis
-- Test full request/response flow
-- Test adapter implementations
+- Test full request/response flow through all layers
+- Test adapter implementations with real database
+- Test transaction boundaries and rollback scenarios
+- Test pagination and projection queries
+
+**Mocking Best Practices**:
+- Use `@Mock` for dependencies
+- Use `@InjectMocks` for class under test
+- Use `@ExtendWith(MockitoExtension.class)` for JUnit 5
+- Verify interactions with `verify()`
+- Use `when().thenReturn()` for stubbing
+- Use `any()`, `anyString()`, `anyList()` for flexible matching
+- Reset mocks in `@BeforeEach` if needed
+
+**Test Naming Conventions**:
+- Test methods: `should[ExpectedBehavior]When[Condition]()`
+- Use `@DisplayName` for readable test descriptions
+- Group related tests in same test class
+- One assertion per test when possible (or related assertions)
 
 ### 9.6 Code Organization
 
@@ -1208,12 +1453,13 @@ public class UserJpaEntity extends BaseJpaEntity { }
 
 **Naming Conventions**:
 - **Aggregates**: `UserAggregate`, `RoleAggregate`, `PermissionAggregate` (must use `@SuperBuilder`)
-- **Entities**: `ProfileEntity`, `AddressEntity`, `AuditEntity` (must use `@SuperBuilder`)
+- **Domain Entities**: `ProfileEntity`, `AddressEntity`, `AuditEntity` (must use `@SuperBuilder`)
+- **JPA Entities**: `UserJpaEntity`, `RoleJpaEntity`, `PermissionJpaEntity` (use `XJpaEntity` suffix)
 - **Value Objects**: `EmailValue`, `PasswordValue`, `UsernameValue` (use regular `@Builder`)
 - **ID Classes**: `UserId`, `RoleId`, `PermissionId` (implement `BaseId<UUID>`)
 - **Ports**: `UserManagementUseCase`, `UserRepositoryPort`
 - **Adapters**: `UserRepositoryAdapter`, `TokenStorageAdapter`
-- **Mappers**: `UserDtoMapper`, `UserEntityMapper`
+- **Mappers**: `UserDtoMapper`, `UserEntityMapper` (maps between domain and data entities)
 - **Request DTOs**: `CreateUserRequest`, `UpdateUserRequest`
 - **Response DTOs**: `UserResponse`, `UserDetailResponse`, `UserSummaryResponse`
 - **Projections**: `UserSummaryProjection`, `RoleSummaryProjection`
@@ -1784,12 +2030,14 @@ public class UserDetailResponse {
 - Maintain clear separation of concerns
 - All ID classes must implement `BaseId<UUID>` and use UUIDv7
 - All aggregates must extend `BaseAggregate<ID>`
-- All entities must extend `BaseEntity<ID>`
-- Use naming conventions: `XAggregate`, `XEntity`, `XValue`
+- All domain entities must extend `BaseEntity<ID>`
+- Use naming conventions: `XAggregate`, `XEntity` (domain), `XJpaEntity` (JPA), `XValue`
 - Separate request and response DTOs in distinct packages
 - Use Spring Data Projections for parent-child relationships
 - Support pagination on all list endpoints
 - Organize code by bounded context
+- Use JUnit Jupiter assertions (`org.junit.jupiter.api.Assertions`) for all tests
+- Mock dependencies using Mockito in unit tests
 
 ---
 
@@ -1803,7 +2051,8 @@ public class UserDetailResponse {
 
 ### 14.2 Naming Conventions
 - Aggregates: `XAggregate` (e.g., `UserAggregate`) - must use `@SuperBuilder`
-- Entities: `XEntity` (e.g., `ProfileEntity`) - must use `@SuperBuilder`
+- Domain Entities: `XEntity` (e.g., `ProfileEntity`) - must use `@SuperBuilder`
+- JPA Entities: `XJpaEntity` (e.g., `UserJpaEntity`, `RoleJpaEntity`) - persistence layer entities
 - Value Objects: `XValue` (e.g., `EmailValue`) - use regular `@Builder`
 - ID Classes: `XId` implementing `BaseId<UUID>`
 
@@ -1837,6 +2086,241 @@ public class UserDetailResponse {
 - Better database indexing performance
 - Natural sorting by creation time
 - Library: `com.github.f4b6a3:uuid-creator:5.2.0`
+
+### 14.7 Aggregate Relationship Mapping
+- Domain aggregates reference other aggregates by ID only (not object references)
+- JPA entities have both FK columns and lazy relationships
+- FK columns are what get persisted (`userId`, `roleId`)
+- Lazy relationships are read-only (`insertable=false, updatable=false`)
+- MapStruct maps: Entity relationships → Domain IDs, Domain IDs → Entity FK columns
+- Round-trip mapping preserves all ID references
+
+---
+
+## 15. Aggregate Relationship Mapping
+
+### 15.1 Pattern Overview
+
+When a domain aggregate needs to reference another aggregate, we use **ID-only references** in the domain layer while maintaining **lazy relationships** in the JPA layer for query convenience. This pattern preserves aggregate boundaries while allowing efficient database queries.
+
+### 15.2 Core Concept
+
+**Domain Layer** (Aggregate Boundaries):
+- Aggregates reference other aggregates by **ID only**
+- No object references between aggregates
+- Maintains clear aggregate boundaries
+- Prevents tight coupling
+
+**Data Layer** (Query Convenience):
+- JPA entities have **FK columns** (what gets persisted)
+- JPA entities have **lazy relationships** (for queries only)
+- Relationships marked as `insertable=false, updatable=false`
+- Allows efficient JOIN FETCH queries
+
+### 15.3 JPA Entity Structure
+
+**Required Structure**:
+```java
+@Entity
+@Table(name = "user_role_assignments")
+public class UserRoleAssignmentJpaEntity {
+    @Id
+    @Column(name = "assignment_id")
+    private UUID assignmentId;
+    
+    // 1. FK column - this is what gets persisted
+    @Column(name = "user_id", nullable = false)
+    private UUID userId;
+    
+    // 2. Lazy relationship - for queries only, never updated
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", insertable = false, updatable = false)
+    private UserJpaEntity user;
+    
+    @Column(name = "role_id", nullable = false)
+    private UUID roleId;
+    
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "role_id", insertable = false, updatable = false)
+    private RoleJpaEntity role;
+    
+    // Own aggregate fields
+    private String scope;
+    private Instant effectiveFrom;
+}
+```
+
+**Key Points**:
+- **FK columns** (`userId`, `roleId`) are separate fields, not just `@JoinColumn`
+- **Relationships** (`user`, `role`) share the same column name but are read-only
+- `insertable=false, updatable=false` ensures relationships never modify FK columns
+- FK columns are what MapStruct maps to/from
+
+### 15.4 Domain Aggregate Structure
+
+```java
+public class UserRoleAssignmentAggregate extends BaseAggregate<UserRoleAssignmentId> {
+    private UserId userId;        // ID only, not UserAggregate object
+    private RoleId roleId;        // ID only, not RoleAggregate object
+    private AssignmentScope scope;
+    private Instant effectiveFrom;
+    
+    // Business logic - never modifies foreign aggregate IDs
+    public void updateScope(AssignmentScope newScope) {
+        this.scope = newScope;
+    }
+}
+```
+
+**Key Points**:
+- Domain only knows **IDs**, not full aggregate objects
+- Maintains aggregate boundaries
+- No dependencies on other aggregate implementations
+
+### 15.5 MapStruct Mapper Implementation
+
+**Entity → Domain Mapping**:
+```java
+@Mapping(target = "id", source = "assignmentId", qualifiedByName = "uuidToUserRoleAssignmentId")
+// Prefer FK column directly (always works, even if relationship not loaded)
+@Mapping(target = "userId", source = "userId", qualifiedByName = "uuidToUserId")
+@Mapping(target = "roleId", source = "roleId", qualifiedByName = "uuidToRoleId")
+// OR extract from relationship (only works if relationship is loaded)
+// @Mapping(target = "userId", source = "user.userId", qualifiedByName = "uuidToUserId")
+UserRoleAssignmentAggregate toDomain(UserRoleAssignmentJpaEntity entity);
+```
+
+**Domain → Entity Mapping**:
+```java
+@Mapping(target = "assignmentId", source = "id.value")
+@Mapping(target = "userId", source = "userId.value")  // Map to FK column
+@Mapping(target = "roleId", source = "roleId.value")  // Map to FK column
+@Mapping(target = "user", ignore = true)   // Never set relationship
+@Mapping(target = "role", ignore = true)   // Never set relationship
+UserRoleAssignmentJpaEntity toEntity(UserRoleAssignmentAggregate domain);
+```
+
+**Why This Works**:
+- **FK columns are set directly** from domain IDs
+- **Relationships are ignored** - they're read-only anyway
+- **Round-trip preserves IDs**: Domain → Entity → Domain maintains all ID references
+- **No dependency on relationship loading** - FK columns always exist
+
+### 15.6 Repository Implementation
+
+```java
+@Repository
+public class UserRoleAssignmentRepositoryAdapter implements UserRoleAssignmentRepositoryPort {
+    
+    private final UserRoleAssignmentJpaRepository jpaRepository;
+    private final UserRoleAssignmentEntityMapper mapper;
+    
+    @Override
+    public UserRoleAssignmentAggregate save(UserRoleAssignmentAggregate assignment) {
+        // Map domain to entity - FK columns set, relationships ignored
+        UserRoleAssignmentJpaEntity entity = mapper.toEntity(assignment);
+        UserRoleAssignmentJpaEntity saved = jpaRepository.save(entity);
+        return mapper.toDomain(saved);
+    }
+    
+    @Override
+    public Optional<UserRoleAssignmentAggregate> findById(UserRoleAssignmentId id) {
+        return jpaRepository.findById(id.getValue())
+            .map(mapper::toDomain);  // Maps FK columns to domain IDs
+    }
+    
+    @Override
+    public List<UserRoleAssignmentAggregate> findByUserId(UserId userId) {
+        // Query uses FK column directly
+        return jpaRepository.findByUser_UserId(userId.getValue()).stream()
+            .map(mapper::toDomain)
+            .collect(Collectors.toList());
+    }
+}
+```
+
+### 15.7 Benefits
+
+**✅ Aggregate Boundaries**:
+- Domain aggregates don't know about other aggregate implementations
+- Clear separation of concerns
+- Easy to test domain logic in isolation
+
+**✅ Query Efficiency**:
+- Can use JOIN FETCH for efficient queries
+- Relationships available when needed
+- No N+1 problems when properly used
+
+**✅ Safety**:
+- `insertable=false, updatable=false` prevents accidental FK modifications
+- MapStruct compiler checks ensure correct mappings
+- FK columns explicitly managed
+
+**✅ Round-trip Integrity**:
+- Domain → Entity → Domain preserves all ID references
+- No data loss in mapping cycles
+- Predictable behavior
+
+### 15.8 Common Patterns
+
+**Pattern 1: FK Column + Relationship (Recommended)**:
+```java
+// JPA Entity
+@Column(name = "user_id")
+private UUID userId;
+
+@ManyToOne(fetch = FetchType.LAZY)
+@JoinColumn(name = "user_id", insertable = false, updatable = false)
+private UserJpaEntity user;
+
+// Mapper
+@Mapping(target = "userId", source = "userId", qualifiedByName = "uuidToUserId")  // From FK
+@Mapping(target = "userId", source = "userId.value")  // To FK
+```
+
+**Pattern 2: Relationship Only (Current Limitation)**:
+```java
+// JPA Entity - only relationship, no FK column field
+@ManyToOne(fetch = FetchType.LAZY)
+@JoinColumn(name = "user_id")
+private UserJpaEntity user;
+
+// Mapper - can extract from relationship, but cannot set FK when mapping domain → entity
+@Mapping(target = "userId", source = "user.userId", qualifiedByName = "uuidToUserId")  // From relationship
+// Cannot map domain → entity FK (no FK column field exists)
+```
+
+**Recommendation**: Always use Pattern 1 (FK column + relationship) for proper round-trip mapping support.
+
+### 15.9 Testing Considerations
+
+**Round-trip Mapping Tests**:
+- When FK columns exist and are mapped correctly, round-trip tests should verify ID preservation
+- When only relationships exist, round-trip tests may show null IDs (expected limitation)
+- Tests should document which pattern is being used
+
+**Example Test**:
+```java
+@Test
+@DisplayName("Should perform round-trip mapping correctly")
+void shouldPerformRoundTripMapping() {
+    UserRoleAssignmentAggregate originalDomain = UserRoleAssignmentAggregate.builder()
+        .id(UserRoleAssignmentId.generate())
+        .userId(UserId.generate())
+        .roleId(RoleId.generate())
+        .scope(AssignmentScope.GLOBAL)
+        .build();
+    
+    UserRoleAssignmentJpaEntity entity = mapper.toEntity(originalDomain);
+    UserRoleAssignmentAggregate mappedDomain = mapper.toDomain(entity);
+    
+    // If FK columns exist and are mapped: IDs should be preserved
+    assertEquals(originalDomain.getUserId().getValue(), mappedDomain.getUserId().getValue());
+    assertEquals(originalDomain.getRoleId().getValue(), mappedDomain.getRoleId().getValue());
+    
+    // If only relationships exist: IDs may be null (documented limitation)
+}
+```
 
 ---
 

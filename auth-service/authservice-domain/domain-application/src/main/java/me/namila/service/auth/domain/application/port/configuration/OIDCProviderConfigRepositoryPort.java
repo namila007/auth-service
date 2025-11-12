@@ -1,10 +1,10 @@
 package me.namila.service.auth.domain.application.port.configuration;
 
 import me.namila.service.auth.domain.core.configuration.model.OIDCProviderConfigAggregate;
+import me.namila.service.auth.domain.core.configuration.model.id.OIDCProviderConfigId;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.UUID;
 
 /**
  * Repository port for OIDCProviderConfig aggregate root.
@@ -23,7 +23,7 @@ public interface OIDCProviderConfigRepositoryPort {
      * @param providerId The provider ID
      * @return Optional containing the config if found
      */
-    Optional<OIDCProviderConfigAggregate> findById(UUID providerId);
+    Optional<OIDCProviderConfigAggregate> findById(OIDCProviderConfigId providerId);
     
     /**
      * Find a config by provider name.
@@ -55,6 +55,6 @@ public interface OIDCProviderConfigRepositoryPort {
      * Delete a config by ID.
      * @param providerId The provider ID
      */
-    void deleteById(UUID providerId);
+    void deleteById(OIDCProviderConfigId providerId);
 }
 

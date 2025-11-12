@@ -29,9 +29,7 @@ dependencies {
     implementation(libs.mapstruct)
     annotationProcessor(libs.mapstruct.processor)
 
-    // Lombok
-    compileOnly(libs.lombok)
-    annotationProcessor(libs.lombok)
+    annotationProcessor("org.projectlombok:lombok-mapstruct-binding:0.2.0")
 
     // Testing
 

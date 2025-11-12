@@ -1,6 +1,6 @@
 package me.namila.service.auth.data.authorization.repository;
 
-import me.namila.service.auth.data.authorization.entity.RoleEntity;
+import me.namila.service.auth.data.authorization.entity.RoleJpaEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -9,15 +9,15 @@ import java.util.Optional;
 import java.util.UUID;
 
 /**
- * Spring Data JPA repository for RoleEntity.
+ * Spring Data JPA repository for RoleJpaEntity.
  */
 @Repository
-public interface RoleJpaRepository extends JpaRepository<RoleEntity, UUID> {
+public interface RoleJpaRepository extends JpaRepository<RoleJpaEntity, UUID> {
     
-    Optional<RoleEntity> findByRoleName(String roleName);
+    Optional<RoleJpaEntity> findByRoleName(String roleName);
     
     boolean existsByRoleName(String roleName);
     
-    List<RoleEntity> findByRoleType(String roleType);
+    List<RoleJpaEntity> findByRoleType(String roleType);
 }
 

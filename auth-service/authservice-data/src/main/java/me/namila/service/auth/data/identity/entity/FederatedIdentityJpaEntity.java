@@ -24,7 +24,8 @@ import java.util.UUID;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class FederatedIdentityEntity {
+public class FederatedIdentityJpaEntity
+{
     
     @Id
     @Column(name = "federated_identity_id")
@@ -32,7 +33,7 @@ public class FederatedIdentityEntity {
     
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
-    private UserEntity user;
+    private UserJpaEntity user;
     
     @Column(name = "provider_id", nullable = false)
     private UUID providerId;

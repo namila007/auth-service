@@ -23,7 +23,8 @@ import java.util.UUID;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class UserProfileEntity {
+public class UserProfileJpaEntity
+{
     
     @Id
     @Column(name = "profile_id")
@@ -31,7 +32,7 @@ public class UserProfileEntity {
     
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false, unique = true)
-    private UserEntity user;
+    private UserJpaEntity user;
     
     @Column(name = "first_name", length = 255)
     private String firstName;

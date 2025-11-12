@@ -1,6 +1,6 @@
 package me.namila.service.auth.data.configuration.repository;
 
-import me.namila.service.auth.data.configuration.entity.OIDCProviderConfigEntity;
+import me.namila.service.auth.data.configuration.entity.OIDCProviderConfigJpaEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -9,15 +9,15 @@ import java.util.Optional;
 import java.util.UUID;
 
 /**
- * Spring Data JPA repository for OIDCProviderConfigEntity.
+ * Spring Data JPA repository for OIDCProviderConfigJpaEntity.
  */
 @Repository
-public interface OIDCProviderConfigJpaRepository extends JpaRepository<OIDCProviderConfigEntity, UUID> {
+public interface OIDCProviderConfigJpaRepository extends JpaRepository<OIDCProviderConfigJpaEntity, UUID> {
     
-    Optional<OIDCProviderConfigEntity> findByProviderName(String providerName);
+    Optional<OIDCProviderConfigJpaEntity> findByProviderName(String providerName);
     
     boolean existsByProviderName(String providerName);
     
-    List<OIDCProviderConfigEntity> findByEnabled(Boolean enabled);
+    List<OIDCProviderConfigJpaEntity> findByEnabled(Boolean enabled);
 }
 

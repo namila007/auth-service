@@ -8,14 +8,6 @@ dependencies {
 
     implementation(libs.uuid.creator )
     
-    // Lombok for reducing boilerplate
-    compileOnly(libs.lombok)
-    annotationProcessor(libs.lombok)
-    
-    // Testing dependencies
-    testImplementation(libs.junit.jupiter)
-    testImplementation(libs.mockito.core)
-    testImplementation(libs.mockito.junit.jupiter)
-    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+
 }
 

@@ -1,6 +1,6 @@
 package me.namila.service.auth.data.governance.mapper;
 
-import me.namila.service.auth.data.governance.entity.AuditLogEntity;
+import me.namila.service.auth.data.governance.entity.AuditLogJpaEntity;
 import me.namila.service.auth.domain.core.governance.model.id.AuditLogId;
 import me.namila.service.auth.domain.core.governance.valueobject.ActorType;
 import me.namila.service.auth.domain.core.governance.valueobject.AuditEventType;
@@ -20,13 +20,13 @@ public interface AuditLogEntityMapper {
     @Mapping(target = "eventType", source = "eventType", qualifiedByName = "stringToAuditEventType")
     @Mapping(target = "actorType", source = "actorType", qualifiedByName = "stringToActorType")
     @Mapping(target = "decision", source = "decision", qualifiedByName = "stringToDecision")
-    me.namila.service.auth.domain.core.governance.model.AuditLogEntity toDomain(AuditLogEntity entity);
+    me.namila.service.auth.domain.core.governance.model.AuditLogEntity toDomain(AuditLogJpaEntity entity);
     
     @Mapping(target = "auditId", source = "id.value")
     @Mapping(target = "eventType", source = "eventType", qualifiedByName = "auditEventTypeToString")
     @Mapping(target = "actorType", source = "actorType", qualifiedByName = "actorTypeToString")
     @Mapping(target = "decision", source = "decision", qualifiedByName = "decisionToString")
-    AuditLogEntity toEntity(me.namila.service.auth.domain.core.governance.model.AuditLogEntity domain);
+    AuditLogJpaEntity toEntity(me.namila.service.auth.domain.core.governance.model.AuditLogEntity domain);
     
     @Named("stringToAuditEventType")
     default AuditEventType stringToAuditEventType(String eventType) {

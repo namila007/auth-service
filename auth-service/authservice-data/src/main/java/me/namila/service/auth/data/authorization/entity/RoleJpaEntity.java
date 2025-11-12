@@ -23,7 +23,8 @@ import java.util.UUID;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class RoleEntity {
+public class RoleJpaEntity
+{
     
     @Id
     @Column(name = "role_id")
