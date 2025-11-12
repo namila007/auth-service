@@ -15,7 +15,8 @@ import org.mapstruct.ReportingPolicy;
 public interface FederatedIdentityEntityMapper {
     
     @Mapping(target = "id", source = "federatedIdentityId", qualifiedByName = "uuidToFederatedIdentityId")
-    @Mapping(target = "userId", source = "user.userId", qualifiedByName = "uuidToUserId")
+    // Extract userId from FK column (preferred - always works)
+    @Mapping(target = "userId", source = "userId", qualifiedByName = "uuidToUserId")
     @Mapping(target = "providerId", source = "providerId")
     @Mapping(target = "subjectId", source = "subjectId")
     @Mapping(target = "issuer", source = "issuer")
@@ -27,6 +28,9 @@ public interface FederatedIdentityEntityMapper {
     me.namila.service.auth.domain.core.identity.model.FederatedIdentityEntity toDomain(FederatedIdentityJpaEntity entity);
     
     @Mapping(target = "federatedIdentityId", source = "id.value")
+    // Map userId to FK column
+    @Mapping(target = "userId", source = "userId.value")
+    // Never set relationship
     @Mapping(target = "user", ignore = true)
     @Mapping(target = "providerId", source = "providerId")
     @Mapping(target = "subjectId", source = "subjectId")

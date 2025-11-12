@@ -53,7 +53,8 @@ class FederatedIdentityJpaEntityMapperTest
 
         FederatedIdentityJpaEntity entity = FederatedIdentityJpaEntity.builder()
                 .federatedIdentityId(federatedIdentityId)
-                .user(userJpaEntity)
+                .userId(userId)  // Set FK column
+                .user(userJpaEntity)  // Relationship for queries
                 .providerId(providerId)
                 .subjectId("subject123")
                 .issuer("https://example.com")
@@ -192,12 +193,11 @@ class FederatedIdentityJpaEntityMapperTest
         FederatedIdentityJpaEntity entity = mapper.toEntity(originalDomain);
         me.namila.service.auth.domain.core.identity.model.FederatedIdentityEntity mappedDomain = mapper.toDomain(entity);
 
-        // Then
+        // Then - Round-trip should preserve all ID references
         assertEquals(originalDomain.getId().getValue(), mappedDomain.getId().getValue());
-        // userId will be null because user entity is not set in JPA entity
-        // and userId is extracted from user.userId in the mapper
-        // This is expected behavior - user entity must be set separately
-        assertNull(mappedDomain.getUserId());
+        // FK column is now properly mapped, so userId should be preserved
+        assertNotNull(mappedDomain.getUserId());
+        assertEquals(originalDomain.getUserId().getValue(), mappedDomain.getUserId().getValue());
         assertEquals(originalDomain.getProviderId(), mappedDomain.getProviderId());
         assertEquals(originalDomain.getSubjectId(), mappedDomain.getSubjectId());
         assertEquals(originalDomain.getIssuer(), mappedDomain.getIssuer());

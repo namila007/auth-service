@@ -28,12 +28,22 @@ public class UserRoleAssignmentJpaEntity
     @Column(name = "assignment_id")
     private UUID assignmentId;
     
+    // FK column - this is what gets persisted
+    @Column(name = "user_id", nullable = false)
+    private UUID userId;
+    
+    // Lazy relationship - for queries only, never updated
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false)
+    @JoinColumn(name = "user_id", insertable = false, updatable = false)
     private UserJpaEntity user;
     
+    // FK column - this is what gets persisted
+    @Column(name = "role_id", nullable = false)
+    private UUID roleId;
+    
+    // Lazy relationship - for queries only, never updated
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "role_id", nullable = false)
+    @JoinColumn(name = "role_id", insertable = false, updatable = false)
     private RoleJpaEntity role;
     
     @Column(name = "scope", nullable = false, length = 50)

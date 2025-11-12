@@ -31,8 +31,13 @@ public class FederatedIdentityJpaEntity
     @Column(name = "federated_identity_id")
     private UUID federatedIdentityId;
     
+    // FK column - this is what gets persisted
+    @Column(name = "user_id", nullable = false)
+    private UUID userId;
+    
+    // Lazy relationship - for queries only, never updated
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false)
+    @JoinColumn(name = "user_id", insertable = false, updatable = false)
     private UserJpaEntity user;
     
     @Column(name = "provider_id", nullable = false)

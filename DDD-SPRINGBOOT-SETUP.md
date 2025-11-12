@@ -2322,6 +2322,258 @@ void shouldPerformRoundTripMapping() {
 }
 ```
 
+### 15.10 Real-World Implementation Examples
+
+This section provides concrete examples from the Auth Service implementation showing Pattern 1 in action.
+
+#### 15.10.1 UserRoleAssignmentAggregate Implementation
+
+**Domain Aggregate** (ID-only references):
+```java
+@SuperBuilder
+@NoArgsConstructor
+@AllArgsConstructor
+public class UserRoleAssignmentAggregate extends BaseAggregate<UserRoleAssignmentId> {
+    private UserRoleAssignmentId id;
+    private UserId userId;        // ID only, not UserAggregate object
+    private RoleId roleId;        // ID only, not RoleAggregate object
+    private AssignmentScope scope;
+    private String scopeContext;
+    private Instant effectiveFrom;
+    private Instant effectiveUntil;
+    private UserId assignedBy;    // ID only
+    private Instant assignedAt;
+    private AssignmentStatus status;
+    private Long version;
+    
+    // Business logic methods - never modify foreign aggregate IDs
+    public void updateScope(AssignmentScope newScope) {
+        this.scope = newScope;
+        markAsUpdated();
+    }
+}
+```
+
+**JPA Entity** (FK columns + relationships):
+```java
+@Entity
+@Table(name = "user_role_assignments", schema = "authorization")
+public class UserRoleAssignmentJpaEntity {
+    @Id
+    @Column(name = "assignment_id")
+    private UUID assignmentId;
+    
+    // FK column - this is what gets persisted
+    @Column(name = "user_id", nullable = false)
+    private UUID userId;
+    
+    // Lazy relationship - for queries only, never updated
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", insertable = false, updatable = false)
+    private UserJpaEntity user;
+    
+    // FK column - this is what gets persisted
+    @Column(name = "role_id", nullable = false)
+    private UUID roleId;
+    
+    // Lazy relationship - for queries only, never updated
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "role_id", insertable = false, updatable = false)
+    private RoleJpaEntity role;
+    
+    @Column(name = "scope", nullable = false)
+    private String scope;
+    
+    @Column(name = "assigned_by", nullable = false)
+    private UUID assignedBy;
+    
+    // Other fields...
+}
+```
+
+**MapStruct Mapper**:
+```java
+@Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
+public interface UserRoleAssignmentEntityMapper {
+    
+    // Entity → Domain: Extract IDs from FK columns (preferred)
+    @Mapping(target = "id", source = "assignmentId", qualifiedByName = "uuidToUserRoleAssignmentId")
+    @Mapping(target = "userId", source = "userId", qualifiedByName = "uuidToUserId")
+    @Mapping(target = "roleId", source = "roleId", qualifiedByName = "uuidToRoleId")
+    @Mapping(target = "assignedBy", source = "assignedBy", qualifiedByName = "uuidToUserId")
+    @Mapping(target = "scope", source = "scope", qualifiedByName = "stringToAssignmentScope")
+    @Mapping(target = "status", source = "status", qualifiedByName = "stringToAssignmentStatus")
+    UserRoleAssignmentAggregate toDomain(UserRoleAssignmentJpaEntity entity);
+    
+    // Domain → Entity: Map IDs to FK columns, ignore relationships
+    @Mapping(target = "assignmentId", source = "id.value")
+    @Mapping(target = "userId", source = "userId.value")
+    @Mapping(target = "roleId", source = "roleId.value")
+    @Mapping(target = "assignedBy", source = "assignedBy.value")
+    @Mapping(target = "user", ignore = true)   // Never set relationship
+    @Mapping(target = "role", ignore = true)   // Never set relationship
+    @Mapping(target = "scope", source = "scope", qualifiedByName = "assignmentScopeToString")
+    @Mapping(target = "status", source = "status", qualifiedByName = "assignmentStatusToString")
+    UserRoleAssignmentJpaEntity toEntity(UserRoleAssignmentAggregate domain);
+    
+    // Helper methods for ID conversions
+    @Named("uuidToUserId")
+    default UserId uuidToUserId(UUID uuid) {
+        return uuid != null ? UserId.of(uuid) : null;
+    }
+    
+    @Named("uuidToRoleId")
+    default RoleId uuidToRoleId(UUID uuid) {
+        return uuid != null ? RoleId.of(uuid) : null;
+    }
+}
+```
+
+**Round-trip Test**:
+```java
+@Test
+@DisplayName("Should perform round-trip mapping correctly")
+void shouldPerformRoundTripMapping() {
+    // Given
+    UserRoleAssignmentId assignmentId = UserRoleAssignmentId.generate();
+    UserId userId = UserId.generate();
+    RoleId roleId = RoleId.generate();
+    UserId assignedBy = UserId.generate();
+    
+    UserRoleAssignmentAggregate originalDomain = UserRoleAssignmentAggregate.builder()
+        .id(assignmentId)
+        .userId(userId)
+        .roleId(roleId)
+        .scope(AssignmentScope.GLOBAL)
+        .assignedBy(assignedBy)
+        .build();
+    
+    // When
+    UserRoleAssignmentJpaEntity entity = mapper.toEntity(originalDomain);
+    UserRoleAssignmentAggregate mappedDomain = mapper.toDomain(entity);
+    
+    // Then - Round-trip should preserve all ID references
+    assertEquals(originalDomain.getId().getValue(), mappedDomain.getId().getValue());
+    assertEquals(originalDomain.getUserId().getValue(), mappedDomain.getUserId().getValue());
+    assertEquals(originalDomain.getRoleId().getValue(), mappedDomain.getRoleId().getValue());
+    assertEquals(originalDomain.getAssignedBy().getValue(), mappedDomain.getAssignedBy().getValue());
+}
+```
+
+#### 15.10.2 FederatedIdentityEntity Implementation
+
+**Domain Entity** (ID-only reference):
+```java
+@SuperBuilder
+@NoArgsConstructor
+@AllArgsConstructor
+public class FederatedIdentityEntity extends BaseEntity<FederatedIdentityId> {
+    private FederatedIdentityId id;
+    private UserId userId;           // ID only, not UserAggregate object
+    private UUID providerId;         // References OIDCProviderConfigAggregate
+    private String subjectId;
+    private String issuer;
+    private Instant linkedAt;
+    private Instant lastSyncedAt;
+    private Map<String, Object> metadata;
+    
+    public void linkToUser(UserId userId) {
+        this.userId = userId;
+        markAsUpdated();
+    }
+}
+```
+
+**JPA Entity** (FK column + relationship):
+```java
+@Entity
+@Table(name = "federated_identities", schema = "identity")
+public class FederatedIdentityJpaEntity {
+    @Id
+    @Column(name = "federated_identity_id")
+    private UUID federatedIdentityId;
+    
+    // FK column - this is what gets persisted
+    @Column(name = "user_id", nullable = false)
+    private UUID userId;
+    
+    // Lazy relationship - for queries only, never updated
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", insertable = false, updatable = false)
+    private UserJpaEntity user;
+    
+    @Column(name = "provider_id", nullable = false)
+    private UUID providerId;
+    
+    // Other fields...
+}
+```
+
+**MapStruct Mapper**:
+```java
+@Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
+public interface FederatedIdentityEntityMapper {
+    
+    // Entity → Domain: Extract userId from FK column
+    @Mapping(target = "id", source = "federatedIdentityId", qualifiedByName = "uuidToFederatedIdentityId")
+    @Mapping(target = "userId", source = "userId", qualifiedByName = "uuidToUserId")
+    FederatedIdentityEntity toDomain(FederatedIdentityJpaEntity entity);
+    
+    // Domain → Entity: Map userId to FK column, ignore relationship
+    @Mapping(target = "federatedIdentityId", source = "id.value")
+    @Mapping(target = "userId", source = "userId.value")
+    @Mapping(target = "user", ignore = true)
+    FederatedIdentityJpaEntity toEntity(FederatedIdentityEntity domain);
+}
+```
+
+#### 15.10.3 Key Implementation Guidelines
+
+**When Creating New Aggregates That Reference Other Aggregates**:
+
+1. **Domain Layer**: Use ID-only references
+   ```java
+   private UserId userId;  // ✅ Correct
+   private UserAggregate user;  // ❌ Wrong - violates aggregate boundaries
+   ```
+
+2. **JPA Entity Layer**: Add both FK column AND relationship
+   ```java
+   @Column(name = "user_id")
+   private UUID userId;  // ✅ FK column for persistence
+   
+   @ManyToOne(fetch = FetchType.LAZY)
+   @JoinColumn(name = "user_id", insertable = false, updatable = false)
+   private UserJpaEntity user;  // ✅ Relationship for queries
+   ```
+
+3. **Mapper Layer**: Map FK columns, not relationships
+   ```java
+   // ✅ Correct - uses FK column
+   @Mapping(target = "userId", source = "userId", qualifiedByName = "uuidToUserId")
+   
+   // ❌ Wrong - uses relationship (fails if not loaded)
+   @Mapping(target = "userId", source = "user.userId", qualifiedByName = "uuidToUserId")
+   ```
+
+4. **Test Layer**: Verify round-trip mapping preserves IDs
+   ```java
+   @Test
+   void shouldPerformRoundTripMapping() {
+       // Create domain with IDs
+       // Map to entity
+       // Map back to domain
+       // Assert IDs are preserved
+   }
+   ```
+
+**Benefits of This Approach**:
+- ✅ Aggregate boundaries preserved in domain layer
+- ✅ Round-trip mapping works correctly
+- ✅ Can use JOIN FETCH for efficient queries when needed
+- ✅ No accidental FK modifications (insertable=false, updatable=false)
+- ✅ Clear separation: FK columns for persistence, relationships for queries
+
 ---
 
 ## Conclusion

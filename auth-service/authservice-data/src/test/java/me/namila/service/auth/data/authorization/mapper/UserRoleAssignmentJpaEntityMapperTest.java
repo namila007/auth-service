@@ -65,8 +65,10 @@ class UserRoleAssignmentJpaEntityMapperTest
 
         UserRoleAssignmentJpaEntity entity = UserRoleAssignmentJpaEntity.builder()
                 .assignmentId(assignmentId)
-                .user(userJpaEntity)
-                .role(roleJpaEntity)
+                .userId(userId)  // Set FK column
+                .user(userJpaEntity)  // Relationship for queries
+                .roleId(roleId)  // Set FK column
+                .role(roleJpaEntity)  // Relationship for queries
                 .scope("GLOBAL")
                 .scopeContext("tenant123")
                 .effectiveFrom(now)
@@ -255,13 +257,15 @@ class UserRoleAssignmentJpaEntityMapperTest
         UserRoleAssignmentJpaEntity entity = mapper.toEntity(originalDomain);
         UserRoleAssignmentAggregate mappedDomain = mapper.toDomain(entity);
 
-        // Then
+        // Then - Round-trip should preserve all ID references
         assertEquals(originalDomain.getId().getValue(), mappedDomain.getId().getValue());
-        // userId and roleId will be null because user/role entities are ignored in mapper
-        // and userId/roleId are extracted from user.userId/role.roleId
-        // This is expected behavior - user/role entities must be set separately
-        assertNull(mappedDomain.getUserId());
-        assertNull(mappedDomain.getRoleId());
+        // FK columns are now properly mapped, so IDs should be preserved
+        assertNotNull(mappedDomain.getUserId());
+        assertEquals(originalDomain.getUserId().getValue(), mappedDomain.getUserId().getValue());
+        assertNotNull(mappedDomain.getRoleId());
+        assertEquals(originalDomain.getRoleId().getValue(), mappedDomain.getRoleId().getValue());
+        assertNotNull(mappedDomain.getAssignedBy());
+        assertEquals(originalDomain.getAssignedBy().getValue(), mappedDomain.getAssignedBy().getValue());
         assertEquals(originalDomain.getScope(), mappedDomain.getScope());
         assertEquals(originalDomain.getScopeContext(), mappedDomain.getScopeContext());
         assertEquals(originalDomain.getStatus(), mappedDomain.getStatus());

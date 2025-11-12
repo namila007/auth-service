@@ -21,8 +21,9 @@ public interface UserRoleAssignmentEntityMapper {
     @Mapping(target = "id", source = "assignmentId", qualifiedByName = "uuidToUserRoleAssignmentId")
     @Mapping(target = "scope", source = "scope", qualifiedByName = "stringToAssignmentScope")
     @Mapping(target = "status", source = "status", qualifiedByName = "stringToAssignmentStatus")
-    @Mapping(target = "userId", source = "user.userId", qualifiedByName = "uuidToUserId")
-    @Mapping(target = "roleId", source = "role.roleId", qualifiedByName = "uuidToRoleId")
+    // Extract IDs from FK columns (preferred - always works)
+    @Mapping(target = "userId", source = "userId", qualifiedByName = "uuidToUserId")
+    @Mapping(target = "roleId", source = "roleId", qualifiedByName = "uuidToRoleId")
     @Mapping(target = "assignedBy", source = "assignedBy", qualifiedByName = "uuidToUserId")
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
@@ -31,9 +32,13 @@ public interface UserRoleAssignmentEntityMapper {
     @Mapping(target = "assignmentId", source = "id.value")
     @Mapping(target = "scope", source = "scope", qualifiedByName = "assignmentScopeToString")
     @Mapping(target = "status", source = "status", qualifiedByName = "assignmentStatusToString")
+    // Map IDs to FK columns
+    @Mapping(target = "userId", source = "userId.value")
+    @Mapping(target = "roleId", source = "roleId.value")
+    @Mapping(target = "assignedBy", source = "assignedBy.value")
+    // Never set relationships
     @Mapping(target = "user", ignore = true)
     @Mapping(target = "role", ignore = true)
-    @Mapping(target = "assignedBy", source = "assignedBy.value")
     UserRoleAssignmentJpaEntity toEntity(UserRoleAssignmentAggregate domain);
     
     @Named("stringToAssignmentScope")
