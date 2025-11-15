@@ -76,3 +76,8 @@ jobs:
     # See: https://github.com/gradle/actions/blob/main/dependency-submission/README.md
     - name: Generate and submit dependency graph
       uses: gradle/actions/dependency-submission@af1da67850ed9a4cedd57bfd976089dd991e2582 # v4.0.0
+      with:
+        # Use a particular Gradle version instead of the configured wrapper.
+        gradle-version: '9.2.0'
+                # The gradle project is not in the root of the repository.
+        build-root-directory: auth-service
