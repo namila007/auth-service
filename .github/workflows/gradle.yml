@@ -81,3 +81,5 @@ jobs:
         gradle-version: '9.2.0'
                 # The gradle project is not in the root of the repository.
         build-root-directory: auth-service
+        dependency-graph: 'generate-and-submit' # Default value is 'generate-submit-and-upload'
+        build-scan-publish: true
