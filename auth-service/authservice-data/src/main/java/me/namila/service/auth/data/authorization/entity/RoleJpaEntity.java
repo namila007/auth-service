@@ -17,7 +17,7 @@ import java.util.UUID;
  * JPA entity for Role aggregate root.
  */
 @Entity
-@Table(name = "roles", schema = "authorization")
+@Table(name = "roles", schema = "authorizations")
 @Getter
 @Setter
 @Builder

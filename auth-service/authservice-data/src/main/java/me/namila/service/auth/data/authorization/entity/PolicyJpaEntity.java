@@ -18,7 +18,7 @@ import java.util.UUID;
  * JPA entity for Policy aggregate root.
  */
 @Entity
-@Table(name = "policies", schema = "authorization")
+@Table(name = "policies", schema = "authorizations")
 @Getter
 @Setter
 @Builder

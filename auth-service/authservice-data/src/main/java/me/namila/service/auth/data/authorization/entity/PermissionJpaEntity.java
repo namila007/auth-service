@@ -17,7 +17,7 @@ import java.util.UUID;
  * JPA entity for Permission.
  */
 @Entity
-@Table(name = "permissions", schema = "authorization",
+@Table(name = "permissions", schema = "authorizations",
        uniqueConstraints = @UniqueConstraint(columnNames = {"resource", "action", "scope"}))
 @Getter
 @Setter

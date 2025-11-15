@@ -28,3 +28,4 @@ logs/
 # Test
 .gradle-test-kit/
 
+*.gz
