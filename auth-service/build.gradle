@@ -4,6 +4,7 @@ plugins {
     id('java')
     id("org.springframework.boot") version "3.5.7" apply false
     id("io.spring.dependency-management") version "1.1.5" apply false
+    id('jacoco')
 }
 
 allprojects {
@@ -19,7 +20,8 @@ allprojects {
 subprojects {
     apply plugin: "io.spring.dependency-management"
     apply plugin: 'java'
-
+    apply plugin: 'jacoco'
+  
     java {
         sourceCompatibility = JavaVersion.VERSION_25
         targetCompatibility = JavaVersion.VERSION_25
@@ -29,11 +31,26 @@ subprojects {
         imports {
             mavenBom(SpringBootPlugin.BOM_COORDINATES)
         }
-
     }
+    
     test {
         systemProperty "net.bytebuddy.experimental", "true"
-    } // To enable experimental features in ByteBuddy used by Mockito for Java25
+        finalizedBy jacocoTestReport
+    }
+    
+    jacoco {
+        toolVersion = "0.8.13"
+    }
+    
+    jacocoTestReport {
+        dependsOn test
+        reports {
+            xml.required = false
+            csv.required = false
+            html.required = true
+            html.outputLocation = layout.buildDirectory.dir('reports/jacoco')
+        }
+    }
 
     dependencies {
         // Lombok for reducing boilerplate
@@ -49,7 +66,6 @@ subprojects {
 
     tasks.withType(JavaCompile).configureEach {
         options.encoding = "UTF-8"
-//        options.compilerArgs.addAll(listOf("-parameters", "-Xlint:unchecked"))
     }
 
     tasks.withType(Test).tap {
@@ -59,3 +75,27 @@ subprojects {
     }
 }
 
+// Aggregated Jacoco Report Task
+tasks.register('jacocoAggregatedReport', JacocoReport) {
+    dependsOn subprojects*.test
+    
+    // Collect all source directories from subprojects
+    subprojects.each { subproject ->
+        if (subproject.pluginManager.hasPlugin('java')) {
+            sourceDirectories.from(subproject.sourceSets.main.allSource.srcDirs)
+            classDirectories.from(subproject.sourceSets.main.output)
+            executionData(subproject.tasks.withType(Test))
+        }
+    }
+    
+    reports {
+        xml.required = true
+        xml.outputLocation = file("${buildDir}/reports/jacoco/aggregate/jacocoTestReport.xml")
+        csv.required = false
+        html.required = true
+        html.outputLocation = file("${buildDir}/reports/jacoco/aggregate")
+    }
+}
+
+// Bind aggregated report to build
+build.dependsOn jacocoAggregatedReport
