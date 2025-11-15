@@ -1,9 +1,11 @@
 # Auth Service
 
 [![GitHub Actions - Gradle](https://github.com/namila007/auth-service/actions/workflows/gradle.yml/badge.svg)](https://github.com/namila007/auth-service/actions/workflows/gradle.yml)
-[![Java](https://img.shields.io/badge/java-17-blue.svg)](https://www.oracle.com/java/)
-[![Gradle](https://img.shields.io/badge/gradle-wrapper-7.x-brightgreen.svg)](https://gradle.org/)
+[![Java](https://img.shields.io/badge/java-25-blue.svg)](https://www.oracle.com/java/)
+[![Gradle](https://img.shields.io/badge/Gradle-v9.2.0-green.svg)](https://gradle.org/)
 [![Docker Compose](https://img.shields.io/badge/docker--compose-ready-blue.svg)](./infra/docker-compose.yaml)
+![GitHub License](https://img.shields.io/github/license/namila007/auth-service)
+
 
 Lightweight authentication service built with Java and Gradle, following a modular DDD structure. This repository contains the application code, domain modules, data layer, and an `infra/` folder with Docker-compose configuration for local development.
 
