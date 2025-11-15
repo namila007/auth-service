@@ -37,7 +37,7 @@ jobs:
       run: chmod +x ./auth-service/gradlew
 
     - name: AuthService Build with Gradle Wrapper
-      run: ./auth-service/gradlew build
+      run: cd auth-service && ./gradlew build
 
 
     # NOTE: The Gradle Wrapper is the default and recommended way to run Gradle (https://docs.gradle.org/current/userguide/gradle_wrapper.html).
