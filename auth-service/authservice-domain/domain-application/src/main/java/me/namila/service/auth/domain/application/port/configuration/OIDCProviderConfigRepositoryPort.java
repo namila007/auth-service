@@ -2,6 +2,8 @@ package me.namila.service.auth.domain.application.port.configuration;
 
 import me.namila.service.auth.domain.core.configuration.model.OIDCProviderConfigAggregate;
 import me.namila.service.auth.domain.core.configuration.model.id.OIDCProviderConfigId;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 import java.util.Optional;
@@ -44,6 +46,13 @@ public interface OIDCProviderConfigRepositoryPort {
      * @return List of all configs
      */
     List<OIDCProviderConfigAggregate> findAll();
+    
+    /**
+     * Find all configs with pagination.
+     * @param pageable Pagination information
+     * @return Page of configs
+     */
+    Page<OIDCProviderConfigAggregate> findAll(Pageable pageable);
     
     /**
      * Find enabled configs.

@@ -6,6 +6,8 @@ import me.namila.service.auth.data.configuration.repository.OIDCProviderConfigJp
 import me.namila.service.auth.domain.application.port.configuration.OIDCProviderConfigRepositoryPort;
 import me.namila.service.auth.domain.core.configuration.model.OIDCProviderConfigAggregate;
 import me.namila.service.auth.domain.core.configuration.model.id.OIDCProviderConfigId;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -52,6 +54,12 @@ public class OIDCProviderConfigRepositoryAdapter implements OIDCProviderConfigRe
         return jpaRepository.findAll().stream()
             .map(mapper::toDomain)
             .collect(Collectors.toList());
+    }
+    
+    @Override
+    public Page<OIDCProviderConfigAggregate> findAll(Pageable pageable) {
+        return jpaRepository.findAll(pageable)
+            .map(mapper::toDomain);
     }
     
     @Override
