@@ -1,5 +1,5 @@
 [versions]
-spring-boot = "3.3.0"
+spring-boot = "3.5.7"
 spring-dependency-management = "1.1.5"
 kotlin = "1.9.24"
 mapstruct = "1.5.5.Final"
@@ -9,7 +9,7 @@ lettuce = "6.3.1.RELEASE"
 flyway = "10.8.1"
 junit = "5.10.2"
 mockito = "5.11.0"
-springdoc-openapi = "2.5.0"
+springdoc-openapi = "2.8.14"
 jjwt = "0.12.5"
 jakarta-validation = "3.0.2"
 testcontainers = "1.19.7"
@@ -77,4 +77,3 @@ spring-data = ["spring-boot-starter-data-jpa", "spring-boot-starter-data-redis"]
 spring-security = ["spring-boot-starter-security", "spring-boot-starter-oauth2-client"]
 jwt = ["jjwt-api", "jjwt-impl", "jjwt-jackson"]
 testing = ["junit-jupiter", "mockito-core", "mockito-junit-jupiter", "spring-boot-starter-test"]
-
