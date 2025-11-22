@@ -1,55 +1,61 @@
 package me.namila.service.auth.domain.core.identity.model.id;
 
-import com.github.f4b6a3.uuid.UuidCreator;
-import lombok.EqualsAndHashCode;
-import me.namila.service.auth.common.domain.BaseId;
-
 import java.util.UUID;
 
+import com.github.f4b6a3.uuid.UuidCreator;
+
+import me.namila.service.auth.common.domain.BaseId;
+
 /**
- * FederatedIdentity identifier implementing BaseId with UUIDv7 generation.
+ * Identifier for FederatedIdentity entity.
  */
-@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public class FederatedIdentityId implements BaseId<UUID> {
-    
-    @EqualsAndHashCode.Include
+
     private UUID value;
-    
-    private FederatedIdentityId(UUID value) {
-        if (value == null) {
-            throw new IllegalArgumentException("FederatedIdentity ID cannot be null");
-        }
+
+    public FederatedIdentityId(UUID value) {
         this.value = value;
     }
-    
-    public static FederatedIdentityId of(String id) {
-        return new FederatedIdentityId(UUID.fromString(id));
-    }
-    
-    public static FederatedIdentityId of(UUID id) {
-        return new FederatedIdentityId(id);
-    }
-    
-    public static FederatedIdentityId generate() {
-        return new FederatedIdentityId(UuidCreator.getTimeOrderedEpoch());
-    }
-    
+
     @Override
     public UUID getValue() {
         return value;
     }
-    
+
     @Override
     public void setValue(UUID value) {
-        if (value == null) {
-            throw new IllegalArgumentException("FederatedIdentity ID cannot be null");
-        }
         this.value = value;
     }
-    
+
+    public static FederatedIdentityId of(UUID value) {
+        return new FederatedIdentityId(value);
+    }
+
+    public static FederatedIdentityId of(String value) {
+        return new FederatedIdentityId(UUID.fromString(value));
+    }
+
+    public static FederatedIdentityId generate() {
+        return new FederatedIdentityId(UuidCreator.getTimeOrderedEpoch());
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o)
+            return true;
+        if (o == null || getClass() != o.getClass())
+            return false;
+        FederatedIdentityId that = (FederatedIdentityId) o;
+        return value.equals(that.value);
+    }
+
+    @Override
+    public int hashCode() {
+        return value.hashCode();
+    }
+
     @Override
     public String toString() {
         return value.toString();
     }
 }
-
