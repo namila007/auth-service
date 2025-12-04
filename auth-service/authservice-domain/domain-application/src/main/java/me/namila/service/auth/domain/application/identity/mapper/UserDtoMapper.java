@@ -81,7 +81,10 @@ public interface UserDtoMapper {
     UserProfileResponse toProfileResponse(UserProfileEntity profile);
 
     @Mapping(target = "federatedIdentityId", source = "id.value")
+    @Mapping(target = "providerId", source = "providerId.value")
     @Mapping(target = "providerName", ignore = true) // Will be populated from provider config
+    @Mapping(target = "linkedAt", source = "linkedAt", qualifiedByName = "localDateTimeToInstant")
+    @Mapping(target = "lastSyncedAt", source = "lastSyncedAt", qualifiedByName = "localDateTimeToInstant")
     FederatedIdentityResponse toFederatedIdentityResponse(FederatedIdentityEntity federatedIdentity);
 
     @Named("stringToUsername")
