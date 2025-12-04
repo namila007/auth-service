@@ -106,7 +106,7 @@ public class JITProvisioningService {
         var response = userApplicationService.createUser(createRequest);
 
         return userRepositoryPort
-                .findById(me.namila.service.auth.domain.core.identity.model.id.UserId.of(response.userId()))
+                .findById(me.namila.service.auth.domain.core.identity.model.id.UserId.of(response.getUserId()))
                 .orElseThrow();
     }
 

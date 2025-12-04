@@ -11,6 +11,34 @@
 5. [OIDC Provider Configuration](#5-oidc-provider-configuration)
 6. [Authorization Flow](#6-authorization-flow)
 7. [Implementation Phases](#7-implementation-phases)
+8. [Current Project Status](#8-current-project-status)
+
+---
+
+## 8. Current Project Status
+
+### Completed
+- **Domain Core**: Entities and Value Objects for Identity, Authorization, Configuration, and Governance.
+- **Domain Application**:
+    - Repository Ports for all contexts.
+    - `UserApplicationService` (User Management).
+    - `OIDCProviderConfigApplicationService` (OIDC Configuration).
+- **REST API**:
+    - `UserController` (User Management).
+    - `OIDCProviderController` (OIDC Configuration).
+
+### Missing / To Do
+- **OIDC Integration**: `OIDCAuthenticationService` and `AuthenticationController` (Login/Callback flow).
+- **Authorization**:
+    - Application Services: `RoleApplicationService`, `PermissionApplicationService`, `RoleAssignmentApplicationService`.
+    - Controllers: `RoleController`, `PermissionController`, `RoleAssignmentController`.
+- **Policy Engine (PDP)**:
+    - Application Services: `PolicyDecisionPointService`, `PolicyApplicationService`.
+    - Controllers: `AuthorizationController`, `PolicyController`.
+- **Governance**:
+    - Application Services: `AuditService`, `ComplianceReportingService`.
+    - Controllers: `AuditController`, `ComplianceController`.
+- **Infrastructure**: Repository implementations (JPA adapters), Security Config, Cache Config.
 
 ---
 
@@ -1912,11 +1940,11 @@ L3: Database (PostgreSQL)
 ### Phase 1: Foundation (Weeks 1-2)
 
 **Deliverables**:
-- [ ] Project setup (Spring Boot 3.x, Java 25, dependencies)
-- [ ] Database schema creation
-- [ ] Core domain models (DDD structure)
-- [ ] Repository interfaces and implementations
-- [ ] Basic error handling and validation framework
+- [x] Project setup (Spring Boot 3.x, Java 25, dependencies)
+- [x] Database schema creation
+- [x] Core domain models (DDD structure)
+- [x] Repository interfaces (Ports)
+- [x] Basic error handling and validation framework
 
 **Key Components**:
 ```
@@ -2012,7 +2040,7 @@ src/main/java/com/company/authservice/
 ### Phase 3: OIDC Integration (Weeks 5-6)
 
 **Deliverables**:
-- [ ] OIDC provider configuration APIs
+- [x] OIDC provider configuration APIs
 - [ ] OIDC authentication flow
 - [ ] JIT provisioning logic
 - [ ] Attribute mapping engine
